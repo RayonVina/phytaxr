@@ -5,7 +5,7 @@
 ![Version: 0.0.1](https://img.shields.io/badge/version-0.0.1-blue.svg)
 <!-- badges: end -->
 
-**phytaxr** provides tools for cleaning, standardising, and resolving
+**PhyTaxR** provides tools for cleaning, standardising, and resolving
 phytoplankton taxon names against external taxonomic databases
 ([WoRMS](https://www.marinespecies.org/) and [GBIF](https://www.gbif.org/)).
 
