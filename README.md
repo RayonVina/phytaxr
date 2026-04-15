@@ -2,7 +2,7 @@
 
 <!-- badges: start -->
 ![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)
-![R package version](https://img.shields.io/github/r-package/v/RayonVina/phytaxr)
+![Version: 0.0.1](https://img.shields.io/badge/version-0.0.1-blue.svg)
 <!-- badges: end -->
 
 **phytaxr** provides tools for cleaning, standardising, and resolving
@@ -203,8 +203,8 @@ vernacular_remove("green alga")
 
 If you use **phytaxr** in published work, please cite it as:
 
-> Rayón Viña, F. (2025). *phytaxr: Phytoplankton Taxonomic Curation Tools*.
-> R package version 0.0.0.9000.
+> Rayón Viña, F. (2026). *phytaxr: Phytoplankton Taxonomic Curation Tools*.
+> R package version 0.0.1.
 > <https://github.com/RayonVina/phytaxr>
 
 ---
