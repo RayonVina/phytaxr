@@ -1,0 +1,13 @@
+.Rproj.user
+/.quarto/
+
+# R session artifacts
+.RData
+.Rhistory
+.Rapp.history
+
+# devtools/check artifacts
+src/**.o
+src/**.so
+/doc/
+/Meta/

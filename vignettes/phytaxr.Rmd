@@ -1,0 +1,192 @@
+---
+title: "Getting started with phytaxr"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Getting started with phytaxr}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment  = "#>",
+  eval     = FALSE
+)
+```
+
+`phytaxr` provides a reproducible pipeline for cleaning and resolving
+phytoplankton taxon names against [WoRMS](https://www.marinespecies.org).
+This vignette walks through the full workflow, from a raw list of names to a
+resolved, taxonomy-enriched data frame.
+
+## Installation
+
+```{r install}
+# From the package source directory:
+devtools::install()
+```
+
+## Workflow overview
+
+The pipeline has three stages:
+
+1. **Clean** — normalise raw names step by step (encoding, abbreviations,
+   uncertain taxa, separator expansion, generic names)
+2. **Resolve** — match cleaned names against WoRMS and GBIF (exact, taxamatch,
+   fuzzy minor correction) and retrieve full classification
+3. **Review** — interactively resolve any remaining unmatched taxa
+
+## 1. Load the package
+
+```{r load}
+library(phytaxr)
+library(dplyr)
+```
+
+## 2. Prepare your input
+
+Start from a character vector of raw taxon names as they appear in your
+original data — abbreviations, common names, and OCR artefacts included.
+
+```{r input}
+raw_taxa <- c(
+  "Thalassiosira weissflogii",
+  "Chaetoceros sp.",
+  "diatom",
+  "Skeletonema Costatum",        # wrong capitalisation
+  "Nitzchia longissima",         # typo: Nitzchia -> Nitzschia
+  "Gymnodinium / Gyrodinium",    # slash entry
+  "Coscinodiscus cf. radiatus"   # uncertain identification
+)
+```
+
+## 3. Clean the names step by step
+
+The cleaning pipeline is composed of individual functions that you can call
+sequentially. Each function takes a data frame with at minimum a `taxon_clean`
+column and returns it modified. Use `tibble::tibble()` to initialise the
+input, then pipe through each step:
+
+```{r clean}
+library(tibble)
+
+df <- tibble(
+  taxon_original = raw_taxa,
+  taxon_clean    = raw_taxa
+)
+
+df <- df |>
+  normalize_characters()           |>  # 1. encoding, diacritics, whitespace
+  process_taxonomic_prefixes()     |>  # 2. cf., aff., s.l., s.str., etc.
+  process_incertae_entries()       |>  # 3. incertae sedis
+  process_sp_entries()             |>  # 4. sp., spp., sp. nov.
+  process_bracket_entries()        |>  # 5. parenthesised qualifiers
+  move_size_to_epithet()           |>  # 6. size annotations
+  process_epithet_entries()        |>  # 7. epithets
+  normalize_infraspecific_ranks()  |>  # 8. var., subsp., f., etc.
+  remove_dots()                    |>  # 9. stray dots
+  move_reproductive_structures()   |>  # 10a. cysts, spores, …
+  move_uncertainty_descriptors()   |>  # 10b. unidentified, unknown, …
+  move_morphological_descriptors() |>  # 10c. centric, pennate, …
+  move_with_descriptors()          |>  # 10d. "with …" phrases
+  move_formia_to_epithet()         |>  # 10e. forma
+  move_commas_to_epithet()         |>  # 10f. post-comma strings
+  move_authors_to_epithet()        |>  # 10g. authorships
+  remove_sp_tokens()               |>  # 11. sp/spp/ssp tokens in epithet
+  split_separator_entries()        |>  # 12. unfold /, &, + entries
+  process_generic_taxa()           |>  # 13. vernacular → taxon name
+  clean_trailing_hyphens()             # 14. stray hyphens
+```
+
+## 4. Resolve against WoRMS and GBIF
+
+`resolve_taxonomy()` is the main entry point for the external resolution
+stage. It runs the full sequential pipeline on a data frame that already
+has a `taxon_clean` column (as produced by the cleaning step above, or
+directly on raw names):
+
+```{r resolve}
+result <- resolve_taxonomy(raw_taxa)
+```
+
+The output is a tibble with one row per input name (slash entries are
+expanded) and columns for matched and accepted names, AphiaIDs, taxonomic
+status, resolution method, and the full classification from kingdom to forma.
+
+```{r inspect}
+# Resolution summary
+result |>
+  count(resolution_method, sort = TRUE)
+
+# Unresolved entries
+result |>
+  filter(is.na(matched_aphiaid)) |>
+  select(taxon_original, taxon_clean)
+```
+
+## 5. Interactive fuzzy review
+
+For taxa that could not be resolved automatically, `process_fuzzy_batch()`
+presents cascading WoRMS suggestions and collects your choices interactively.
+Progress is saved to a checkpoint file after each accepted entry so sessions
+can be interrupted and resumed.
+
+```{r fuzzy}
+# Build vocabularies from already-resolved taxa to power edit-distance search
+genus_vocab   <- build_genus_vocabulary(result)
+epithet_vocab <- build_epithet_vocabulary(result)
+
+# Run the interactive loop (only processes rows where matched_aphiaid is NA)
+result <- process_fuzzy_batch(
+  df              = result,
+  genus_vocab     = genus_vocab,
+  epithet_vocab   = epithet_vocab,
+  checkpoint_file = "phytaxr_checkpoint.rds"
+)
+```
+
+Each unresolved entry shows ranked candidates grouped by confidence tier
+(good, longshot, genus fallback). You can:
+
+- Enter a number to accept a suggestion
+- `m` to enter an AphiaID or name manually
+- `e` to flag for expert review
+- `f` to flag for removal
+- `s` to skip
+- `c` to stop the session
+
+## 6. Save results
+
+```{r save}
+readr::write_csv(result, "taxonomy_resolved.csv")
+```
+
+## Vernacular name dictionary
+
+`phytaxr` ships with an internal dictionary of common phytoplankton vernacular
+names (e.g. `"diatom"` → `"Bacillariophyceae"`). The dictionary is stored in
+`R/sysdata.rda` and loaded automatically. Session-level changes are kept in
+memory and lost on restart; to make them permanent, edit
+`data-raw/vernacular.R` and re-run it.
+
+```{r vernacular}
+# List all entries
+vernacular_list()
+
+# Look up a single name (case-insensitive)
+vernacular_lookup("diatom")
+#> [1] "Bacillariophyceae"
+
+# Search by pattern (in keys, values, or both)
+vernacular_search("diatom")
+
+# Add a new entry (session only)
+vernacular_add("green alga", "Chlorophyta")
+
+# Update an existing entry (session only)
+vernacular_update("diatom", "Bacillariophyta")
+
+# Remove an entry (session only)
+vernacular_remove("green alga")
+```
