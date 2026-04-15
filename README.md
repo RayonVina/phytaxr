@@ -201,9 +201,9 @@ vernacular_remove("green alga")
 
 ## Citation
 
-If you use **phytaxr** in published work, please cite it as:
+If you use **PhyTaxR** in published work, please cite it as:
 
-> Rayón Viña, F. (2026). *phytaxr: Phytoplankton Taxonomic Curation Tools*.
+> Rayón Viña, F. (2026). *PhyTaxR: Phytoplankton Taxonomic Curation Tools*.
 > R package version 0.0.1.
 > <https://github.com/RayonVina/phytaxr>
 
