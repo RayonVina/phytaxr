@@ -1,4 +1,4 @@
-# phytaxr (development)
+# phytaxr 0.0.1
 
 ## Bug fixes
 
@@ -17,9 +17,12 @@
 * Removed duplicate definitions of `calculate_similarity()` and
   `verify_genus_exists()` from `R/strict.R`. Both functions are defined
   (and documented) in `R/utils.R`; the duplicates in `strict.R` were
-  triggering *R CMD CHECK* warnings about masked/duplicated definitions.
-  Callers in `strict.R` resolve the functions correctly through the
-  package namespace.
+  triggering *R CMD CHECK* warnings about masked/duplicated definitions
+  (`R/strict.R`).
 
-* Added `@keywords internal` to `%||%` in `R/utils.R` to make its
-  internal-only status explicit in the generated documentation.
+* Added `@name op-null-default` to `%||%` in `R/utils.R` so that
+  roxygen2 generates a valid `.Rd` filename without pipe characters,
+  eliminating the `checkRd` WARNING (`R/utils.R`).
+
+* Converted `LICENSE` to DCF stub format (`YEAR` / `COPYRIGHT HOLDER`)
+  as required by R; full MIT text moved to `LICENSE.note`.

@@ -21,6 +21,8 @@
 #'
 #' @return `lhs` if not `NULL`, else `rhs`.
 #'
+#' @name op-null-default
+#' @aliases %||%
 #' @keywords internal
 `%||%` <- function(lhs, rhs) if (!is.null(lhs)) lhs else rhs
 
