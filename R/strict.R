@@ -65,52 +65,6 @@ cross_validate_with_worms <- function(gbif_matched_name) {
   !is.null(worms_check) && !is.na(worms_check)
 }
 
-# ----------------------------------------
-
-#' Calculate string similarity between two names
-#'
-#' Computes a normalised similarity score (0-1) between two strings using
-#' Levenshtein distance. Used to filter fuzzy matches.
-#'
-#' @param str1 Character. First string.
-#' @param str2 Character. Second string.
-#'
-#' @return Numeric between 0 and 1.
-#'
-#' @importFrom stringdist stringdist
-#'
-#' @keywords internal
-calculate_similarity <- function(str1, str2) {
-  if (is.na(str1) || is.na(str2) || str1 == "" || str2 == "") return(0)
-  lev_dist <- stringdist::stringdist(tolower(str1), tolower(str2), method = "lv")
-  1 - (lev_dist / max(nchar(str1), nchar(str2)))
-}
-
-# ----------------------------------------
-
-#' Verify that a genus name exists in WoRMS
-#'
-#' Queries WoRMS for an exact genus-rank record. Used to validate fuzzy
-#' matches before accepting them in the pipeline.
-#'
-#' @param genus_name Character. Genus name to check.
-#'
-#' @return Logical. `TRUE` if a genus-rank record is found.
-#'
-#' @importFrom worrms wm_records_name
-#'
-#' @keywords internal
-verify_genus_exists <- function(genus_name) {
-  if (is.na(genus_name) || genus_name == "") return(FALSE)
-  result <- worms_with_timeout(
-    worrms::wm_records_name(genus_name, fuzzy = FALSE, marine_only = FALSE)
-  )
-  if (!is.null(result) && nrow(result) > 0) {
-    return(nrow(result[tolower(result$rank) == "genus", ]) > 0)
-  }
-  FALSE
-}
-
 # ============================================================================
 # PIPELINE FUNCTIONS (§5.3)
 # ============================================================================
