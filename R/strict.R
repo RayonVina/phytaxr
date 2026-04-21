@@ -75,8 +75,11 @@ cross_validate_with_worms <- function(gbif_matched_name) {
 #' using [worms_robust_search()]. Fills `matched_aphiaid`, `matched_name`,
 #' `accepted_name`, `taxonomic_status`, and `resolution_method`.
 #'
-#' @param df A data frame with at least columns `taxon_clean` and
-#'   `matched_aphiaid`.
+#' Calls [ensure_resolution_schema()] on entry so that the function can be
+#' used directly on the output of the cleaning pipeline without requiring the
+#' user to pre-initialise the resolution columns.
+#'
+#' @param df A data frame with at least column `taxon_clean`.
 #'
 #' @return The input `df` with resolved rows updated in-place.
 #'
@@ -84,6 +87,7 @@ cross_validate_with_worms <- function(gbif_matched_name) {
 #'
 #' @export
 search_worms_priority <- function(df) {
+  df <- ensure_resolution_schema(df)
   cat("--- 5.1 WoRMS Priority (Exact) ---\n")
 
   unresolved_indices <- which(is.na(df$matched_aphiaid))
@@ -137,6 +141,10 @@ search_worms_priority <- function(df) {
 #' "unidentified / unknown / not classified"), queries the WoRMS Taxamatch
 #' service. Applies the best match when a valid record is returned.
 #'
+#' Calls [ensure_resolution_schema()] on entry so that the function can be
+#' used directly on the output of the cleaning pipeline without requiring the
+#' user to pre-initialise the resolution columns.
+#'
 #' @param df A data frame as returned by [search_worms_priority()].
 #'
 #' @return Updated `df`.
@@ -147,6 +155,7 @@ search_worms_priority <- function(df) {
 #'
 #' @export
 search_worms_taxamatch <- function(df) {
+  df <- ensure_resolution_schema(df)
   cat("--- 5.2 WoRMS Taxamatch ---\n")
 
   unresolved_indices <- which(is.na(df$matched_aphiaid))
@@ -238,6 +247,10 @@ search_worms_taxamatch <- function(df) {
 #' when confidence is >= 99, matchType is EXACT, and the returned name is
 #' found in WoRMS.
 #'
+#' Calls [ensure_resolution_schema()] on entry so that the function can be
+#' used directly on the output of the cleaning pipeline without requiring the
+#' user to pre-initialise the resolution columns.
+#'
 #' @param df A data frame as returned by [search_worms_taxamatch()].
 #'
 #' @return Updated `df`.
@@ -246,6 +259,7 @@ search_worms_taxamatch <- function(df) {
 #'
 #' @export
 search_gbif_strict <- function(df) {
+  df <- ensure_resolution_schema(df)
   cat("--- 5.3 GBIF Strict ---\n")
 
   unresolved_indices <- which(is.na(df$matched_aphiaid))
@@ -299,85 +313,98 @@ search_gbif_strict <- function(df) {
 #' status is not "accepted", follows the `valid_AphiaID` pointer to fill
 #' `accepted_aphiaid` and `accepted_name`.
 #'
+#' Calls [ensure_resolution_schema()] on entry so that the function can be
+#' used directly on the output of the cleaning pipeline without requiring the
+#' user to pre-initialise the resolution columns.
+#'
 #' @param df A data frame as returned by [search_gbif_strict()].
 #'
 #' @return Updated `df`.
 #'
 #' @importFrom progress progress_bar
-#' @importFrom stringr str_detect
 #' @importFrom worrms wm_record
 #'
 #' @export
 resolve_taxonomic_status <- function(df) {
+  df <- ensure_resolution_schema(df)
   cat("--- 5.4 Taxonomic Status Resolution ---\n")
 
-  worms_indices <- which(
-    !is.na(df$matched_aphiaid) &
-      !is.na(df$resolution_method) &
-      stringr::str_detect(df$resolution_method, "^worms")
-  )
-
-  if (length(worms_indices) == 0) {
-    cat("  No WoRMS records to validate\n\n")
+  resolved_indices <- which(!is.na(df$matched_aphiaid))
+  if (length(resolved_indices) == 0) {
+    cat("  No resolved records to process\n\n")
     return(df)
   }
 
-  cat(sprintf("  Validating: %d WoRMS records\n", length(worms_indices)))
+  needs_check <- resolved_indices[
+    is.na(df$accepted_aphiaid[resolved_indices]) |
+      is.na(df$accepted_name[resolved_indices])
+  ]
+
+  if (length(needs_check) == 0) {
+    cat("  All resolved records already have accepted name\n\n")
+    return(df)
+  }
+
+  cat(sprintf("  Checking: %d records\n", length(needs_check)))
 
   pb <- progress::progress_bar$new(
     format = "  [:bar] :percent (:current/:total) :eta",
-    total  = length(worms_indices), clear = FALSE, width = 80
+    total  = length(needs_check), clear = FALSE, width = 80
   )
 
-  corrections_made <- 0
-  for (i in worms_indices) {
-    aphia_id <- df$matched_aphiaid[i]
-    if (!is.na(aphia_id)) {
-      full_record <- worms_with_timeout(worrms::wm_record(aphia_id))
+  for (i in needs_check) {
+    record <- worms_with_timeout(worrms::wm_record(df$matched_aphiaid[i]))
+    if (!is.null(record)) {
+      df$taxonomic_status[i] <- record$status
       if (
-        !is.null(full_record) &&
-          full_record$status != "accepted" &&
-          !is.null(full_record$valid_AphiaID) &&
-          !is.na(full_record$valid_AphiaID) &&
-          full_record$valid_AphiaID != aphia_id
+        !is.null(record$valid_AphiaID) &&
+          !is.na(record$valid_AphiaID) &&
+          record$AphiaID != record$valid_AphiaID
       ) {
-        accepted_record <- worms_with_timeout(
-          worrms::wm_record(full_record$valid_AphiaID)
+        df$accepted_aphiaid[i] <- as.integer(record$valid_AphiaID)
+        valid_record <- worms_with_timeout(
+          worrms::wm_record(record$valid_AphiaID)
         )
-        if (!is.null(accepted_record)) {
-          df$accepted_aphiaid[i] <- as.integer(full_record$valid_AphiaID)
-          df$accepted_name[i]    <- accepted_record$scientificname
-          df$taxonomic_status[i] <- accepted_record$status
+        if (!is.null(valid_record)) {
+          df$accepted_name[i] <- valid_record$scientificname
           if (is.na(df$resolution_notes[i]) || df$resolution_notes[i] == "") {
             df$resolution_notes[i] <- paste0(
-              "Status: ", full_record$scientificname,
-              " (", full_record$status, ") \u2192 ", accepted_record$scientificname
+              "Synonym resolved: ", record$scientificname,
+              " \u2192 ", valid_record$scientificname
             )
           }
-          corrections_made <- corrections_made + 1
+        }
+      } else {
+        if (is.na(df$accepted_name[i])) {
+          df$accepted_name[i] <- record$scientificname
         }
       }
     }
     pb$tick()
   }
 
-  cat(sprintf("  Corrections: %d\n\n", corrections_made))
+  cat("  Done\n\n")
   df
 }
 
 # ----------------------------------------
 
-#' Step 5.5 -- WoRMS fuzzy minor corrections (automatic)
+#' Step 5.5 -- WoRMS fuzzy search (minor corrections)
 #'
-#' For remaining unresolved rows with >= 2 tokens and >= 6 characters,
-#' queries WoRMS Taxamatch and accepts the match automatically when it
-#' passes similarity, Levenshtein distance, and genus-existence filters.
-#' Uses parallel processing via `furrr`.
+#' For each remaining unresolved row whose name has >= 6 characters and
+#' contains at least two words (excluding names with "classified"), queries
+#' WoRMS Taxamatch and accepts the result only when the Levenshtein
+#' similarity exceeds `min_similarity_score` and the genus is confirmed to
+#' exist in WoRMS.
+#'
+#' Calls [ensure_resolution_schema()] on entry so that the function can be
+#' used directly on the output of the cleaning pipeline without requiring the
+#' user to pre-initialise the resolution columns.
 #'
 #' @param df A data frame as returned by [resolve_taxonomic_status()].
-#' @param fuzzy_config Named list with keys `max_levenshtein_distance`
-#'   (default `3`), `min_similarity_score` (default `0.85`), and
-#'   `require_genus_match` (default `TRUE`).
+#' @param fuzzy_config Named list with elements `max_levenshtein_distance`
+#'   (integer), `min_similarity_score` (numeric 0-1), and
+#'   `require_genus_match` (logical, default `TRUE`).
 #' @param ncores Integer. Number of parallel workers. Default `2`.
 #'
 #' @return Updated `df`.
@@ -400,6 +427,7 @@ search_worms_fuzzy_minor <- function(
     ),
     ncores = 2
 ) {
+  df <- ensure_resolution_schema(df)
   cat("--- 5.5 WoRMS Fuzzy (Minor Corrections) ---\n")
 
   unresolved_indices <- which(is.na(df$matched_aphiaid))
@@ -460,40 +488,29 @@ search_worms_fuzzy_minor <- function(
                   similarity <- calculate_similarity(
                     original_name, best_match$scientificname
                   )
-                  lev_dist <- stringdist::stringdist(
-                    tolower(original_name),
-                    tolower(best_match$scientificname),
-                    method = "lv"
-                  )
-                  passes_similarity <- similarity >=
-                    fuzzy_config$min_similarity_score
-                  passes_distance   <- lev_dist <=
-                    fuzzy_config$max_levenshtein_distance
-                  genus_valid <- TRUE
-                  if (fuzzy_config$require_genus_match) {
-                    genus_from_match <- stringr::word(
-                      best_match$scientificname, 1
-                    )
-                    genus_valid <- verify_genus_exists(genus_from_match)
-                  }
-                  if (passes_similarity && passes_distance && genus_valid) {
-                    return(list(
-                      accepted     = TRUE,
-                      aphia_id     = best_match$AphiaID,
-                      matched_name = best_match$scientificname,
-                      accepted_name = best_match$valid_name %||%
-                        best_match$scientificname,
-                      status        = best_match$status,
-                      valid_aphia_id = best_match$valid_AphiaID,
-                      similarity    = similarity,
-                      distance      = lev_dist
-                    ))
+                  if (similarity >= fuzzy_config$min_similarity_score) {
+                    genus_ok <- if (fuzzy_config$require_genus_match) {
+                      verify_genus_exists(stringr::word(original_name, 1))
+                    } else {
+                      TRUE
+                    }
+                    if (genus_ok) {
+                      return(list(
+                        found      = TRUE,
+                        aphiaid    = as.integer(best_match$AphiaID),
+                        name       = best_match$scientificname,
+                        valid_name = best_match$valid_name,
+                        valid_id   = as.integer(best_match$valid_AphiaID),
+                        status     = best_match$status,
+                        similarity = similarity
+                      ))
+                    }
                   }
                 }
               }
             }
           }
-          list(accepted = FALSE)
+          list(found = FALSE)
         },
         .options = furrr::furrr_options(seed = TRUE)
       )
@@ -502,32 +519,24 @@ search_worms_fuzzy_minor <- function(
   future::plan(future::sequential)
 
   resolved_count <- 0
-  for (row_idx in seq_len(nrow(candidates_df))) {
-    match <- candidates_df$match_info[[row_idx]]
-    if (!is.null(match) && match$accepted) {
-      idx <- candidates_df$search_idx[row_idx]
-      df$matched_aphiaid[idx]   <- as.integer(match$aphia_id)
-      df$matched_name[idx]      <- match$matched_name
-      df$accepted_name[idx]     <- match$accepted_name
-      df$taxonomic_status[idx]  <- match$status
+  for (row_i in seq_len(nrow(candidates_df))) {
+    info <- candidates_df$match_info[[row_i]]
+    if (isTRUE(info$found)) {
+      idx <- candidates_df$search_idx[row_i]
+      df$matched_aphiaid[idx]   <- info$aphiaid
+      df$matched_name[idx]      <- info$name
+      df$accepted_name[idx]     <- info$valid_name %||% info$name
+      df$taxonomic_status[idx]  <- info$status
       df$resolution_method[idx] <- "worms_fuzzy_minor"
-      if (
-        !is.null(match$valid_aphia_id) && !is.na(match$valid_aphia_id) &&
-          match$aphia_id != match$valid_aphia_id
-      ) {
-        df$accepted_aphiaid[idx] <- as.integer(match$valid_aphia_id)
-        df$resolution_notes[idx] <- paste0(
-          "Fuzzy (syn): ", candidates_df$taxon_clean[row_idx],
-          " \u2192 ", match$matched_name,
-          " \u2192 ", match$accepted_name,
-          " (s:", round(match$similarity, 2), ",d:", match$distance, ")"
-        )
-      } else {
-        df$resolution_notes[idx] <- paste0(
-          "Fuzzy: ", candidates_df$taxon_clean[row_idx],
-          " \u2192 ", match$matched_name,
-          " (s:", round(match$similarity, 2), ",d:", match$distance, ")"
-        )
+      df$resolution_notes[idx]  <- sprintf(
+        "Fuzzy correction (similarity=%.2f): %s \u2192 %s",
+        info$similarity,
+        candidates_df$taxon_clean[row_i],
+        info$name
+      )
+      if (!is.null(info$valid_id) && !is.na(info$valid_id) &&
+            info$aphiaid != info$valid_id) {
+        df$accepted_aphiaid[idx] <- info$valid_id
       }
       resolved_count <- resolved_count + 1
     }
@@ -537,15 +546,22 @@ search_worms_fuzzy_minor <- function(
   df
 }
 
-# ----------------------------------------
+# ============================================================================
+# TAXONOMY RETRIEVAL (§5.6)
+# ============================================================================
 
-#' Step 5.6 -- Taxonomy retrieval
+#' Step 5.6 -- Retrieve full WoRMS taxonomy
 #'
-#' For all resolved rows, fetches the full WoRMS classification via
-#' [worrms::wm_classification()] and fills all taxonomic rank columns
-#' (kingdom through forma), plus `rank` and `taxonomic_status`.
+#' For every row with a non-`NA` `matched_aphiaid` (or `accepted_aphiaid`),
+#' fetches the full WoRMS classification and populates the taxonomic rank
+#' columns (`kingdom` through `forma`) plus `rank`.
 #'
-#' @param df A data frame as returned by [search_worms_fuzzy_minor()].
+#' Calls [ensure_resolution_schema()] on entry so that the function can be
+#' used directly on the output of the cleaning pipeline without requiring the
+#' user to pre-initialise the resolution columns.
+#'
+#' @param df A data frame with at least `matched_aphiaid` and
+#'   `accepted_aphiaid` columns.
 #'
 #' @return Updated `df` with taxonomic rank columns populated.
 #'
@@ -554,6 +570,7 @@ search_worms_fuzzy_minor <- function(
 #'
 #' @export
 get_taxonomy <- function(df) {
+  df <- ensure_resolution_schema(df)
   cat("--- 5.6 Taxonomy Retrieval ---\n")
 
   tax_ranks <- c(
@@ -620,19 +637,18 @@ get_taxonomy <- function(df) {
 #' resolution summary at the end. Equivalent to the §5.4 block in
 #' `master_taxonomy.R`.
 #'
-#' @param df A data frame with at least the columns produced by Step 4
-#'   (`taxon_clean`, `matched_aphiaid`, `matched_name`, `accepted_name`,
-#'   `accepted_aphiaid`, `taxonomic_status`, `resolution_method`,
-#'   `resolution_notes`).
-#' @param fuzzy_config Passed to [search_worms_fuzzy_minor()].
-#' @param ncores Passed to [search_worms_fuzzy_minor()].
+#' Calls [ensure_resolution_schema()] on entry so that the pipeline can be
+#' applied directly to the output of the cleaning pipeline.
 #'
-#' @return Updated `df` after all six steps.
+#' @param df A data frame produced by the cleaning pipeline (Steps 1-4),
+#'   with at least a `taxon_clean` column.
+#' @param fuzzy_config Named list passed to [search_worms_fuzzy_minor()].
+#' @param ncores Integer. Parallel workers for the fuzzy step. Default `2`.
 #'
-#' @importFrom dplyr count
+#' @return The fully resolved `df`.
 #'
 #' @export
-run_strict_pipeline <- function(
+run_resolution_pipeline <- function(
     df,
     fuzzy_config = list(
       max_levenshtein_distance = 3,
@@ -641,13 +657,7 @@ run_strict_pipeline <- function(
     ),
     ncores = 2
 ) {
-  cat("\n=== STEP 5: EXTERNAL TAXONOMIC RESOLUTION ===\n")
-  cat(sprintf("Total entries to process: %d\n", nrow(df)))
-  cat(sprintf(
-    "Unresolved at start: %d\n\n",
-    sum(is.na(df$matched_aphiaid))
-  ))
-
+  df <- ensure_resolution_schema(df)
   df <- search_worms_priority(df)
   df <- search_worms_taxamatch(df)
   df <- search_gbif_strict(df)
@@ -655,15 +665,16 @@ run_strict_pipeline <- function(
   df <- search_worms_fuzzy_minor(df, fuzzy_config = fuzzy_config, ncores = ncores)
   df <- get_taxonomy(df)
 
-  cat("=== STEP 5 SUMMARY ===\n")
-  cat(sprintf("Total entries: %d\n", nrow(df)))
-  cat(sprintf(
-    "Resolved: %d (%.1f%%)\n",
-    sum(!is.na(df$matched_aphiaid)),
-    (sum(!is.na(df$matched_aphiaid)) / nrow(df)) * 100
-  ))
-  cat("\nResolution methods:\n")
-  print(dplyr::count(df, resolution_method, sort = TRUE))
-
+  cat("=== Resolution Summary ===\n")
+  cat(sprintf("  Total:      %d\n", nrow(df)))
+  cat(sprintf("  Resolved:   %d\n", sum(!is.na(df$matched_aphiaid))))
+  cat(sprintf("  Unresolved: %d\n", sum(is.na(df$matched_aphiaid))))
+  if ("resolution_method" %in% names(df)) {
+    tbl <- table(df$resolution_method, useNA = "ifany")
+    for (nm in names(tbl)) {
+      label <- if (is.na(nm)) "unresolved" else nm
+      cat(sprintf("    %-30s %d\n", label, tbl[[nm]]))
+    }
+  }
   df
 }
