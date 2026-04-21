@@ -17,3 +17,8 @@ For each unresolved row with a name of >= 6 characters (excluding
 "unidentified / unknown / not classified"), queries the WoRMS Taxamatch
 service. Applies the best match when a valid record is returned.
 }
+\details{
+Calls \code{\link[=ensure_resolution_schema]{ensure_resolution_schema()}} on entry so that the function can be
+used directly on the output of the cleaning pipeline without requiring the
+user to pre-initialise the resolution columns.
+}

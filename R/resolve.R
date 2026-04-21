@@ -237,3 +237,84 @@ lookup_taxonomy_info <- function(aphiaid_val, lookup) {
     taxonomic_status = as.character(result$taxonomic_status[1])
   )
 }
+
+# ----------------------------------------
+
+#' Ensure the resolution schema is present in a data frame
+#'
+#' Checks for all columns required by the automatic resolution pipeline
+#' and adds any that are missing, initialised to \code{NA} with the correct
+#' type. Existing columns and their values are never modified.
+#'
+#' This function is called internally at the start of each resolution
+#' function (\code{search_worms_priority()}, \code{search_worms_taxamatch()},
+#' \code{search_gbif_strict()}, \code{resolve_taxonomic_status()},
+#' \code{search_worms_fuzzy_minor()}, \code{get_taxonomy()}, and
+#' \code{process_fuzzy_batch()}), so the user does not need to call it
+#' manually. When all columns are already present the function returns
+#' \code{df} unchanged with virtually no overhead.
+#'
+#' @param df A data frame, typically the output of the cleaning pipeline.
+#'
+#' @return The input \code{df} with any missing resolution or taxonomic rank
+#'   columns added and initialised to \code{NA}.
+#'
+#' @importFrom stats setNames
+#' @keywords internal
+ensure_resolution_schema <- function(df) {
+  resolution_cols <- list(
+    matched_aphiaid = NA_integer_,
+    matched_name = NA_character_,
+    accepted_name = NA_character_,
+    accepted_aphiaid = NA_integer_,
+    taxonomic_status = NA_character_,
+    resolution_method = NA_character_,
+    resolution_notes = NA_character_,
+    rank = NA_character_,
+    flag_for_removal = FALSE
+  )
+
+  tax_ranks <- c(
+    "kingdom",
+    "subkingdom",
+    "infrakingdom",
+    "phylum",
+    "subphylum",
+    "infraphylum",
+    "parvphylum",
+    "gigaclass",
+    "superclass",
+    "class",
+    "subclass",
+    "infraclass",
+    "subterclass",
+    "superorder",
+    "order",
+    "suborder",
+    "infraorder",
+    "parvorder",
+    "superfamily",
+    "family",
+    "subfamily",
+    "tribe",
+    "genus",
+    "subgenus",
+    "section",
+    "subsection",
+    "species",
+    "subspecies",
+    "variety",
+    "forma"
+  )
+  tax_cols <- setNames(
+    replicate(length(tax_ranks), NA_character_, simplify = FALSE),
+    tax_ranks
+  )
+
+  all_cols <- c(resolution_cols, tax_cols)
+  missing <- setdiff(names(all_cols), names(df))
+  if (length(missing) > 0) {
+    df[missing] <- all_cols[missing]
+  }
+  df
+}

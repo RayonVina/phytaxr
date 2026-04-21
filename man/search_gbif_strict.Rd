@@ -17,3 +17,8 @@ For each remaining unresolved row, queries GBIF and accepts the match only
 when confidence is >= 99, matchType is EXACT, and the returned name is
 found in WoRMS.
 }
+\details{
+Calls \code{\link[=ensure_resolution_schema]{ensure_resolution_schema()}} on entry so that the function can be
+used directly on the output of the cleaning pipeline without requiring the
+user to pre-initialise the resolution columns.
+}

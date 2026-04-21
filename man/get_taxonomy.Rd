@@ -2,18 +2,24 @@
 % Please edit documentation in R/strict.R
 \name{get_taxonomy}
 \alias{get_taxonomy}
-\title{Step 5.6 -- Taxonomy retrieval}
+\title{Step 5.6 -- Retrieve full WoRMS taxonomy}
 \usage{
 get_taxonomy(df)
 }
 \arguments{
-\item{df}{A data frame as returned by \code{\link[=search_worms_fuzzy_minor]{search_worms_fuzzy_minor()}}.}
+\item{df}{A data frame with at least \code{matched_aphiaid} and
+\code{accepted_aphiaid} columns.}
 }
 \value{
 Updated \code{df} with taxonomic rank columns populated.
 }
 \description{
-For all resolved rows, fetches the full WoRMS classification via
-\code{\link[worrms:wm_classification]{worrms::wm_classification()}} and fills all taxonomic rank columns
-(kingdom through forma), plus \code{rank} and \code{taxonomic_status}.
+For every row with a non-\code{NA} \code{matched_aphiaid} (or \code{accepted_aphiaid}),
+fetches the full WoRMS classification and populates the taxonomic rank
+columns (\code{kingdom} through \code{forma}) plus \code{rank}.
+}
+\details{
+Calls \code{\link[=ensure_resolution_schema]{ensure_resolution_schema()}} on entry so that the function can be
+used directly on the output of the cleaning pipeline without requiring the
+user to pre-initialise the resolution columns.
 }

@@ -17,3 +17,8 @@ For all rows resolved via WoRMS, fetches the full WoRMS record and, if the
 status is not "accepted", follows the \code{valid_AphiaID} pointer to fill
 \code{accepted_aphiaid} and \code{accepted_name}.
 }
+\details{
+Calls \code{\link[=ensure_resolution_schema]{ensure_resolution_schema()}} on entry so that the function can be
+used directly on the output of the cleaning pipeline without requiring the
+user to pre-initialise the resolution columns.
+}

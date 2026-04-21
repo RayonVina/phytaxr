@@ -1549,6 +1549,7 @@ process_fuzzy_batch <- function(
   edit_max_candidates = 15,
   timeout_sec = 15
 ) {
+  df <- ensure_resolution_schema(df)
   if (!is.null(checkpoint_file) && file.exists(checkpoint_file)) {
     cat(sprintf("Checkpoint found: %s -- resuming.\n", checkpoint_file))
     ckpt <- readRDS(checkpoint_file)
