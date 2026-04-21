@@ -12,7 +12,18 @@
 
 # ----------------------------------------
 
-# Null-coalescing operator: returns lhs if not NULL, else rhs.
+#' Null-coalescing operator
+#'
+#' Returns `lhs` if not `NULL`, otherwise returns `rhs`.
+#'
+#' @param lhs An object.
+#' @param rhs Fallback value returned when `lhs` is `NULL`.
+#'
+#' @return `lhs` if not `NULL`, else `rhs`.
+#'
+#' @name op-null-default
+#' @aliases %||%
+#' @keywords internal
 `%||%` <- function(lhs, rhs) if (!is.null(lhs)) lhs else rhs
 
 # ----------------------------------------
@@ -26,13 +37,13 @@
 #' @param str2 A character string.
 #'
 #' @return A numeric value between 0 (no similarity) and 1 (identical).
-#'   Returns 0 if either input is `NA`.
+#'   Returns 0 if either input is `NA` or an empty string.
 #'
 #' @importFrom stringdist stringdist
 #'
 #' @keywords internal
 calculate_similarity <- function(str1, str2) {
-  if (is.na(str1) || is.na(str2)) {
+  if (is.na(str1) || is.na(str2) || str1 == "" || str2 == "") {
     return(0)
   }
   lev_dist <- stringdist::stringdist(

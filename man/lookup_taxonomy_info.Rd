@@ -14,10 +14,62 @@ and each value is a one-row data frame with taxonomic rank columns.}
 }
 \value{
 A one-row \code{\link[tibble:tibble]{tibble::tibble()}} with all taxonomic rank columns
-from kingdom to forma, plus \code{rank} and \code{taxonomic_status}. All
-columns are \code{NA_character_} if the AphiaID is not found.
+from kingdom to forma, plus \code{rank} and \code{taxonomic_status}.
+The order rank is stored in the column \strong{\code{order}} (not
+\code{order_name}). All columns are \code{NA_character_} if the AphiaID
+is not found in \code{lookup}.
 }
 \description{
 Given an AphiaID, retrieves the full taxonomic classification from a
 pre-loaded named list keyed by AphiaID.
+}
+\examples{
+\dontrun{
+# Build a minimal taxonomy dictionary
+tax_dict <- list(
+  "149067" = tibble::tibble(
+    kingdom = "Chromista",
+    subkingdom = NA_character_,
+    infrakingdom = NA_character_,
+    phylum = "Ochrophyta",
+    subphylum = NA_character_,
+    infraphylum = NA_character_,
+    parvphylum = NA_character_,
+    gigaclass = NA_character_,
+    superclass = NA_character_,
+    class = "Bacillariophyceae",
+    subclass = NA_character_,
+    infraclass = NA_character_,
+    subterclass = NA_character_,
+    superorder = NA_character_,
+    order = "Thalassiosirales",   # column is 'order', NOT 'order_name'
+    suborder = NA_character_,
+    infraorder = NA_character_,
+    parvorder = NA_character_,
+    superfamily = NA_character_,
+    family = "Thalassiosiraceae",
+    subfamily = NA_character_,
+    tribe = NA_character_,
+    genus = "Thalassiosira",
+    subgenus = NA_character_,
+    section = NA_character_,
+    subsection = NA_character_,
+    species = "Thalassiosira weissflogii",
+    subspecies = NA_character_,
+    variety = NA_character_,
+    forma = NA_character_,
+    rank = "Species",
+    taxonomic_status = "accepted"
+  )
+)
+
+# Look up an existing AphiaID
+result <- lookup_taxonomy_info(149067L, tax_dict)
+result$order   # "Thalassiosirales"
+result$family  # "Thalassiosiraceae"
+
+# AphiaID not in dictionary -> all NA
+missing <- lookup_taxonomy_info(999999L, tax_dict)
+is.na(missing$order)  # TRUE
+}
 }
