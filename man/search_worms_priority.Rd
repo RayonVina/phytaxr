@@ -7,8 +7,7 @@
 search_worms_priority(df)
 }
 \arguments{
-\item{df}{A data frame with at least columns \code{taxon_clean} and
-\code{matched_aphiaid}.}
+\item{df}{A data frame with at least column \code{taxon_clean}.}
 }
 \value{
 The input \code{df} with resolved rows updated in-place.
@@ -17,4 +16,9 @@ The input \code{df} with resolved rows updated in-place.
 For each unresolved row in \code{df}, attempts an exact name lookup in WoRMS
 using \code{\link[=worms_robust_search]{worms_robust_search()}}. Fills \code{matched_aphiaid}, \code{matched_name},
 \code{accepted_name}, \code{taxonomic_status}, and \code{resolution_method}.
+}
+\details{
+Calls \code{\link[=ensure_resolution_schema]{ensure_resolution_schema()}} on entry so that the function can be
+used directly on the output of the cleaning pipeline without requiring the
+user to pre-initialise the resolution columns.
 }

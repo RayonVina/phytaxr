@@ -2,23 +2,19 @@
 % Please edit documentation in R/utils.R
 \name{verify_genus_exists}
 \alias{verify_genus_exists}
-\title{Verify that a genus name exists in WoRMS}
+\title{Check whether a genus name exists in WoRMS}
 \usage{
 verify_genus_exists(genus_name, timeout_sec = 10)
 }
 \arguments{
-\item{genus_name}{A character string with the genus name to validate.
-Passing \code{NA} or \code{""} is safe and returns \code{FALSE}
-without making any API call.}
+\item{genus_name}{A character string with the genus name to validate.}
 
 \item{timeout_sec}{Timeout in seconds passed to the API wrapper.
 Default \code{10}.}
 }
 \value{
 \code{TRUE} if WoRMS returns at least one record ranked as genus,
-\code{FALSE} otherwise (including when \code{genus_name} is \code{NA}
-or an empty string \code{""}; in both cases the function returns
-\code{FALSE} immediately without querying the API).
+\code{FALSE} otherwise (including when \code{genus_name} is \code{NA} or empty).
 }
 \description{
 Queries WoRMS to verify that a given genus name is a valid accepted
@@ -26,13 +22,7 @@ genus. Used internally to guard against accepting fuzzy matches whose
 genus component does not exist in WoRMS.
 }
 \details{
-The function applies two early-return guards before any network call:
-\enumerate{
-  \item \code{is.na(genus_name)} \eqn{\Rightarrow} returns \code{FALSE}.
-  \item \code{genus_name == ""} \eqn{\Rightarrow} returns \code{FALSE}.
-}
-For any other non-empty string the actual API call is delegated to
-\code{.wm_records_name_safe()}, which is isolated to allow mocking in
-unit tests without eager-evaluation issues.
+Delegates the actual API call to \code{.wm_records_name_safe()}, which is
+isolated to allow mocking in unit tests without eager-evaluation issues.
 }
 \keyword{internal}

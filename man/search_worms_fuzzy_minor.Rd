@@ -2,7 +2,7 @@
 % Please edit documentation in R/strict.R
 \name{search_worms_fuzzy_minor}
 \alias{search_worms_fuzzy_minor}
-\title{Step 5.5 -- WoRMS fuzzy minor corrections (automatic)}
+\title{Step 5.5 -- WoRMS fuzzy search (minor corrections)}
 \usage{
 search_worms_fuzzy_minor(
   df,
@@ -14,9 +14,9 @@ search_worms_fuzzy_minor(
 \arguments{
 \item{df}{A data frame as returned by \code{\link[=resolve_taxonomic_status]{resolve_taxonomic_status()}}.}
 
-\item{fuzzy_config}{Named list with keys \code{max_levenshtein_distance}
-(default \code{3}), \code{min_similarity_score} (default \code{0.85}), and
-\code{require_genus_match} (default \code{TRUE}).}
+\item{fuzzy_config}{Named list with elements \code{max_levenshtein_distance}
+(integer), \code{min_similarity_score} (numeric 0-1), and
+\code{require_genus_match} (logical, default \code{TRUE}).}
 
 \item{ncores}{Integer. Number of parallel workers. Default \code{2}.}
 }
@@ -24,8 +24,14 @@ search_worms_fuzzy_minor(
 Updated \code{df}.
 }
 \description{
-For remaining unresolved rows with >= 2 tokens and >= 6 characters,
-queries WoRMS Taxamatch and accepts the match automatically when it
-passes similarity, Levenshtein distance, and genus-existence filters.
-Uses parallel processing via \code{furrr}.
+For each remaining unresolved row whose name has >= 6 characters and
+contains at least two words (excluding names with "classified"), queries
+WoRMS Taxamatch and accepts the result only when the Levenshtein
+similarity exceeds \code{min_similarity_score} and the genus is confirmed to
+exist in WoRMS.
+}
+\details{
+Calls \code{\link[=ensure_resolution_schema]{ensure_resolution_schema()}} on entry so that the function can be
+used directly on the output of the cleaning pipeline without requiring the
+user to pre-initialise the resolution columns.
 }

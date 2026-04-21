@@ -7,33 +7,16 @@
 calculate_similarity(str1, str2)
 }
 \arguments{
-\item{str1}{A character string. May be \code{NA} or \code{""}; both are
-handled safely.}
+\item{str1}{A character string.}
 
-\item{str2}{A character string. May be \code{NA} or \code{""}; both are
-handled safely.}
+\item{str2}{A character string.}
 }
 \value{
-A numeric value between 0 (no similarity) and 1 (identical strings).
-Returns \code{0} immediately — without calling Levenshtein — whenever
-either input is \code{NA} or an empty string (\code{""}). Returns
-\code{1} when both inputs are identical non-empty strings.
+A numeric value between 0 (no similarity) and 1 (identical).
+Returns 0 if either input is \code{NA} or an empty string.
 }
 \description{
 Computes a normalised similarity score (0--1) between two strings using
-Levenshtein edit distance. Used internally to validate fuzzy WoRMS
-matches. Comparison is case-insensitive.
-}
-\details{
-The score is defined as:
-
-\code{1 - levenshtein(tolower(str1), tolower(str2)) / max(nchar(str1), nchar(str2))}
-
-Edge-case guards (evaluated in order before any distance computation):
-\enumerate{
-  \item Either input is \code{NA} \eqn{\Rightarrow} return \code{0}.
-  \item Either input is \code{""} \eqn{\Rightarrow} return \code{0}.
-  \item Both inputs are non-empty strings \eqn{\Rightarrow} compute score.
-}
+Levenshtein edit distance. Used internally to validate fuzzy WoRMS matches.
 }
 \keyword{internal}
