@@ -217,7 +217,7 @@ lookup_taxonomy_info <- function(aphiaid_val, lookup) {
     infraclass = as.character(result$infraclass[1]),
     subterclass = as.character(result$subterclass[1]),
     superorder = as.character(result$superorder[1]),
-    order = as.character(result$order_name[1]),
+    order = as.character(result$order[1]),
     suborder = as.character(result$suborder[1]),
     infraorder = as.character(result$infraorder[1]),
     parvorder = as.character(result$parvorder[1]),
