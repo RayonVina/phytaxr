@@ -259,27 +259,52 @@ lookup_taxonomy_info <- function(aphiaid_val, lookup) {
 #' @return The input \code{df} with any missing resolution or taxonomic rank
 #'   columns added and initialised to \code{NA}.
 #'
+#' @importFrom stats setNames
 #' @keywords internal
 ensure_resolution_schema <- function(df) {
   resolution_cols <- list(
-    matched_aphiaid   = NA_integer_,
-    matched_name      = NA_character_,
-    accepted_name     = NA_character_,
-    accepted_aphiaid  = NA_integer_,
-    taxonomic_status  = NA_character_,
+    matched_aphiaid = NA_integer_,
+    matched_name = NA_character_,
+    accepted_name = NA_character_,
+    accepted_aphiaid = NA_integer_,
+    taxonomic_status = NA_character_,
     resolution_method = NA_character_,
-    resolution_notes  = NA_character_,
-    rank              = NA_character_,
-    flag_for_removal  = FALSE
+    resolution_notes = NA_character_,
+    rank = NA_character_,
+    flag_for_removal = FALSE
   )
 
   tax_ranks <- c(
-    "kingdom", "subkingdom", "infrakingdom", "phylum", "subphylum",
-    "infraphylum", "parvphylum", "gigaclass", "superclass", "class",
-    "subclass", "infraclass", "subterclass", "superorder", "order",
-    "suborder", "infraorder", "parvorder", "superfamily", "family",
-    "subfamily", "tribe", "genus", "subgenus", "section", "subsection",
-    "species", "subspecies", "variety", "forma"
+    "kingdom",
+    "subkingdom",
+    "infrakingdom",
+    "phylum",
+    "subphylum",
+    "infraphylum",
+    "parvphylum",
+    "gigaclass",
+    "superclass",
+    "class",
+    "subclass",
+    "infraclass",
+    "subterclass",
+    "superorder",
+    "order",
+    "suborder",
+    "infraorder",
+    "parvorder",
+    "superfamily",
+    "family",
+    "subfamily",
+    "tribe",
+    "genus",
+    "subgenus",
+    "section",
+    "subsection",
+    "species",
+    "subspecies",
+    "variety",
+    "forma"
   )
   tax_cols <- setNames(
     replicate(length(tax_ranks), NA_character_, simplify = FALSE),
@@ -287,7 +312,7 @@ ensure_resolution_schema <- function(df) {
   )
 
   all_cols <- c(resolution_cols, tax_cols)
-  missing  <- setdiff(names(all_cols), names(df))
+  missing <- setdiff(names(all_cols), names(df))
   if (length(missing) > 0) {
     df[missing] <- all_cols[missing]
   }
