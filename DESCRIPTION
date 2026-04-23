@@ -1,6 +1,6 @@
 Package: phytaxr
 Title: Phytoplankton Taxonomic Curation Tools
-Version: 0.0.1
+Version: 0.1.0
 Authors@R: 
     person("Fernando", "Rayón Viña", , "tu@email.com", role = c("aut", "cre"))
 Description: Provides tools for cleaning, standardizing, and resolving

@@ -4,10 +4,13 @@
 \alias{search_worms_taxamatch}
 \title{Step 5.2 -- WoRMS Taxamatch}
 \usage{
-search_worms_taxamatch(df)
+search_worms_taxamatch(df, col = "taxon_clean")
 }
 \arguments{
 \item{df}{A data frame as returned by \code{\link[=search_worms_priority]{search_worms_priority()}}.}
+
+\item{col}{Character. Name of the column containing the cleaned taxon
+names. Default \code{"taxon_clean"}.}
 }
 \value{
 Updated \code{df}.
@@ -21,4 +24,15 @@ service. Applies the best match when a valid record is returned.
 Calls \code{\link[=ensure_resolution_schema]{ensure_resolution_schema()}} on entry so that the function can be
 used directly on the output of the cleaning pipeline without requiring the
 user to pre-initialise the resolution columns.
+}
+\examples{
+\dontrun{
+# Direct string query mode
+search_worms_taxamatch(c("Chaetoceros decipens", "Emiliania huxley"))
+
+# data.frame with custom column name
+df <- data.frame(clean_name = c("Thalasiosira weissflogii"))
+search_worms_taxamatch(df, col = "clean_name")
+}
+
 }

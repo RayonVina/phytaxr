@@ -113,3 +113,98 @@ verify_genus_exists <- function(genus_name, timeout_sec = 10) {
 }
 
 # ----------------------------------------
+
+#' Convert a character vector to a minimal pipeline-compatible data frame
+#'
+#' Takes a character vector of taxon names and wraps it in a one-column
+#' data frame with the internal column name `taxon_clean`, which is the
+#' working column used throughout the resolution pipeline. This is used
+#' internally to allow pipeline functions to accept bare character vectors
+#' in addition to data frames.
+#'
+#' @param x A character vector of taxon names. `NA` values are preserved.
+#'
+#' @return A data frame with a single column `taxon_clean`.
+#'
+#' @keywords internal
+names_to_df <- function(x) {
+  if (!is.character(x)) {
+    stop("`x` must be a character vector.")
+  }
+  data.frame(taxon_clean = x, stringsAsFactors = FALSE)
+}
+
+# ----------------------------------------
+
+#' Resolve and normalise the taxon column inside a data frame
+#'
+#' Validates that the user-supplied column name exists in the data frame
+#' and, if it differs from `taxon_clean`, renames it to `taxon_clean` so
+#' the rest of the pipeline can work with a single known column name.
+#' The original column name is stored in the attribute `"original_col"`
+#' of the returned data frame so it can be restored later if needed.
+#'
+#' @param df A data frame.
+#' @param col A character string with the name of the column that contains
+#'   taxon names. Default: `"taxon_clean"`.
+#'
+#' @return `df` with the taxon column renamed to `taxon_clean` (if
+#'   necessary), and attribute `"original_col"` set to `col`.
+#'
+#' @keywords internal
+resolve_col <- function(df, col = "taxon_clean") {
+  if (!col %in% names(df)) {
+    stop(sprintf(
+      "Column '%s' not found in data frame. Available columns: %s",
+      col,
+      paste(names(df), collapse = ", ")
+    ))
+  }
+  if (col != "taxon_clean") {
+    names(df)[names(df) == col] <- "taxon_clean"
+  }
+  attr(df, "original_col") <- col
+  df
+}
+
+# ----------------------------------------
+
+#' Format pipeline output for direct query mode
+#'
+#' Selects and returns only the most relevant columns from a resolved
+#' data frame when pipeline functions are called with a bare character
+#' vector instead of a full data frame. Keeps the output readable in
+#' an interactive session without exposing the 30+ taxonomy rank columns
+#' that are mostly `NA` at query time.
+#'
+#' @param df A data frame returned by any pipeline resolution function.
+#' @param original_col Character. The original taxon column name supplied
+#'   by the user (stored in `attr(df, "original_col")`). Used to rename
+#'   the output column back to what the user expects. Default: `"taxon_clean"`.
+#'
+#' @return A [tibble::tibble()] with columns: the taxon column (renamed to
+#'   `original_col`), `matched_name`, `accepted_name`, `taxonomic_status`,
+#'   `resolution_method`, and `resolution_notes`.
+#'
+#' @importFrom tibble as_tibble
+#'
+#' @keywords internal
+format_query_result <- function(df, original_col = "taxon_clean") {
+  keep <- c(
+    "taxon_clean",
+    "matched_name",
+    "accepted_name",
+    "taxonomic_status",
+    "resolution_method",
+    "resolution_notes"
+  )
+  # Keep only columns that actually exist (pipeline may not have all yet)
+  keep <- keep[keep %in% names(df)]
+  out <- df[, keep, drop = FALSE]
+
+  # Restore original column name
+  if (original_col != "taxon_clean" && "taxon_clean" %in% names(out)) {
+    names(out)[names(out) == "taxon_clean"] <- original_col
+  }
+  tibble::as_tibble(out)
+}

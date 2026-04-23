@@ -4,10 +4,13 @@
 \alias{search_gbif_strict}
 \title{Step 5.3 -- GBIF strict (confidence >= 99, EXACT, cross-validated with WoRMS)}
 \usage{
-search_gbif_strict(df)
+search_gbif_strict(df, col = "taxon_clean")
 }
 \arguments{
 \item{df}{A data frame as returned by \code{\link[=search_worms_taxamatch]{search_worms_taxamatch()}}.}
+
+\item{col}{Character. Name of the column containing the cleaned taxon
+names. Default \code{"taxon_clean"}.}
 }
 \value{
 Updated \code{df}.
@@ -21,4 +24,15 @@ found in WoRMS.
 Calls \code{\link[=ensure_resolution_schema]{ensure_resolution_schema()}} on entry so that the function can be
 used directly on the output of the cleaning pipeline without requiring the
 user to pre-initialise the resolution columns.
+}
+\examples{
+\dontrun{
+# Direct string query mode
+search_gbif_strict(c("Chaetoceros decipiens"))
+
+# data.frame with custom column name
+df <- data.frame(clean_name = c("Emiliania huxleyi"))
+search_gbif_strict(df, col = "clean_name")
+}
+
 }

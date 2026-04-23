@@ -1529,6 +1529,8 @@ save_progress <- function(
 #'   the function is called, it is loaded automatically and processing
 #'   resumes from where it left off. Set to `NULL` to disable checkpointing.
 #'   Default `"phytaxr_step6_checkpoint.rds"`.
+#' @param col Character. Name of the column to use as the cleaned taxon name
+#'   source. Default `"taxon_clean"`.
 #'
 #' @return The updated data frame.
 #'
@@ -1539,6 +1541,7 @@ process_fuzzy_batch <- function(
   df,
   genus_vocab,
   epithet_vocab,
+  col = "taxon_clean",
   batch_size = 10,
   checkpoint_file = "phytaxr_step6_checkpoint.rds",
   min_similarity = 0.85,
@@ -1549,7 +1552,6 @@ process_fuzzy_batch <- function(
   edit_max_candidates = 15,
   timeout_sec = 15
 ) {
-  df <- ensure_resolution_schema(df)
   if (!is.null(checkpoint_file) && file.exists(checkpoint_file)) {
     cat(sprintf("Checkpoint found: %s -- resuming.\n", checkpoint_file))
     ckpt <- readRDS(checkpoint_file)
@@ -1559,6 +1561,8 @@ process_fuzzy_batch <- function(
     }
     if (!is.null(ckpt$epithet_vocab)) epithet_vocab <- ckpt$epithet_vocab
   }
+  df <- resolve_col(df, col)
+  df <- ensure_resolution_schema(df)
 
   unresolved_idx <- which(
     is.na(df$matched_aphiaid) &
@@ -1593,7 +1597,7 @@ process_fuzzy_batch <- function(
     for (i in seq_along(batch_indices)) {
       idx <- batch_indices[i]
       original <- df$taxon[idx]
-      cleaned <- df$taxon_clean[idx]
+      cleaned <- df[[col]][idx]
 
       cat(sprintf(
         "\nEntry %d of %d\n%s\n",

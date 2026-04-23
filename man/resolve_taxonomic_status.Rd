@@ -4,10 +4,13 @@
 \alias{resolve_taxonomic_status}
 \title{Step 5.4 -- Taxonomic status resolution}
 \usage{
-resolve_taxonomic_status(df)
+resolve_taxonomic_status(df, col = "taxon_clean")
 }
 \arguments{
 \item{df}{A data frame as returned by \code{\link[=search_gbif_strict]{search_gbif_strict()}}.}
+
+\item{col}{Character. Name of the column containing the cleaned taxon
+names. Default \code{"taxon_clean"}.}
 }
 \value{
 Updated \code{df}.
@@ -21,4 +24,16 @@ status is not "accepted", follows the \code{valid_AphiaID} pointer to fill
 Calls \code{\link[=ensure_resolution_schema]{ensure_resolution_schema()}} on entry so that the function can be
 used directly on the output of the cleaning pipeline without requiring the
 user to pre-initialise the resolution columns.
+}
+\examples{
+\dontrun{
+# Typically called after search_gbif_strict()
+df <- search_gbif_strict(c("Chaetoceros decipiens"))
+resolve_taxonomic_status(df)
+
+# data.frame with custom column name
+df2 <- data.frame(clean_name = c("Emiliania huxleyi"))
+resolve_taxonomic_status(df2, col = "clean_name")
+}
+
 }

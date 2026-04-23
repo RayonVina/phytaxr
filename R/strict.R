@@ -28,7 +28,7 @@ call_gbif_api <- function(name, max_retries = 2, timeout_sec = 10) {
     tryCatch(
       {
         response <- httr::GET(
-          url   = base_url,
+          url = base_url,
           query = list(name = name),
           httr::timeout(timeout_sec),
           httr::user_agent("R-PhytoMAP-TaxonomyResolver/1.0")
@@ -60,7 +60,9 @@ call_gbif_api <- function(name, max_retries = 2, timeout_sec = 10) {
 #'
 #' @keywords internal
 cross_validate_with_worms <- function(gbif_matched_name) {
-  if (is.na(gbif_matched_name) || gbif_matched_name == "") return(FALSE)
+  if (is.na(gbif_matched_name) || gbif_matched_name == "") {
+    return(FALSE)
+  }
   worms_check <- worms_with_timeout(worrms::wm_name2id(gbif_matched_name))
   !is.null(worms_check) && !is.na(worms_check)
 }
@@ -80,13 +82,34 @@ cross_validate_with_worms <- function(gbif_matched_name) {
 #' user to pre-initialise the resolution columns.
 #'
 #' @param df A data frame with at least column `taxon_clean`.
+#' @param col Character. Name of the column containing the cleaned taxon
+#'   names. Default `"taxon_clean"`.
 #'
 #' @return The input `df` with resolved rows updated in-place.
 #'
 #' @importFrom progress progress_bar
 #'
+#' @examples
+#' \dontrun{
+#' # Direct string query mode
+#' search_worms_priority(c("Chaetoceros decipiens", "Emiliania huxleyi"))
+#'
+#' # data.frame with standard column
+#' df <- data.frame(taxon_clean = c("Thalassiosira weissflogii", "Skeletonema costatum"))
+#' search_worms_priority(df)
+#'
+#' # data.frame with custom column name
+#' df2 <- data.frame(clean_name = c("Chaetoceros debilis"))
+#' search_worms_priority(df2, col = "clean_name")
+#' }
+#'
 #' @export
-search_worms_priority <- function(df) {
+search_worms_priority <- function(df, col = "taxon_clean") {
+  query_mode <- is.character(df)
+  if (query_mode) {
+    df <- names_to_df(df)
+  }
+  df <- resolve_col(df, col)
   df <- ensure_resolution_schema(df)
   cat("--- 5.1 WoRMS Priority (Exact) ---\n")
 
@@ -100,28 +123,35 @@ search_worms_priority <- function(df) {
 
   pb <- progress::progress_bar$new(
     format = "  [:bar] :percent (:current/:total) :eta",
-    total  = length(unresolved_indices), clear = FALSE, width = 80
+    total = length(unresolved_indices),
+    clear = FALSE,
+    width = 80
   )
 
   resolved_count <- 0
   for (i in unresolved_indices) {
     result <- worms_robust_search(df$taxon_clean[i], method = "exact")
     if (!is.null(result)) {
-      df$matched_aphiaid[i]   <- as.integer(result$AphiaID)
-      df$matched_name[i]      <- result$scientificName
-      df$accepted_name[i]     <- ifelse(
+      df$matched_aphiaid[i] <- as.integer(result$AphiaID)
+      df$matched_name[i] <- result$scientificName
+      df$accepted_name[i] <- ifelse(
         !is.null(result$valid_name) && !is.na(result$valid_name),
-        result$valid_name, result$scientificName
+        result$valid_name,
+        result$scientificName
       )
-      df$taxonomic_status[i]  <- result$status
+      df$taxonomic_status[i] <- result$status
       df$resolution_method[i] <- "worms_exact"
       if (
-        !is.null(result$valid_AphiaID) && !is.na(result$valid_AphiaID) &&
+        !is.null(result$valid_AphiaID) &&
+          !is.na(result$valid_AphiaID) &&
           result$AphiaID != result$valid_AphiaID
       ) {
-        df$accepted_aphiaid[i]  <- as.integer(result$valid_AphiaID)
-        df$resolution_notes[i]  <- paste0(
-          "Synonym: ", result$scientificName, " \u2192 ", result$valid_name
+        df$accepted_aphiaid[i] <- as.integer(result$valid_AphiaID)
+        df$resolution_notes[i] <- paste0(
+          "Synonym: ",
+          result$scientificName,
+          " \u2192 ",
+          result$valid_name
         )
       }
       resolved_count <- resolved_count + 1
@@ -146,6 +176,8 @@ search_worms_priority <- function(df) {
 #' user to pre-initialise the resolution columns.
 #'
 #' @param df A data frame as returned by [search_worms_priority()].
+#' @param col Character. Name of the column containing the cleaned taxon
+#'   names. Default `"taxon_clean"`.
 #'
 #' @return Updated `df`.
 #'
@@ -153,8 +185,23 @@ search_worms_priority <- function(df) {
 #' @importFrom stringr str_detect
 #' @importFrom worrms wm_records_taxamatch
 #'
+#' @examples
+#' \dontrun{
+#' # Direct string query mode
+#' search_worms_taxamatch(c("Chaetoceros decipens", "Emiliania huxley"))
+#'
+#' # data.frame with custom column name
+#' df <- data.frame(clean_name = c("Thalasiosira weissflogii"))
+#' search_worms_taxamatch(df, col = "clean_name")
+#' }
+#'
 #' @export
-search_worms_taxamatch <- function(df) {
+search_worms_taxamatch <- function(df, col = "taxon_clean") {
+  query_mode <- is.character(df)
+  if (query_mode) {
+    df <- names_to_df(df)
+  }
+  df <- resolve_col(df, col)
   df <- ensure_resolution_schema(df)
   cat("--- 5.2 WoRMS Taxamatch ---\n")
 
@@ -165,7 +212,7 @@ search_worms_taxamatch <- function(df) {
   }
 
   unresolved_names <- df$taxon_clean[unresolved_indices]
-  candidate_names  <- unresolved_names[
+  candidate_names <- unresolved_names[
     nchar(unresolved_names) >= 6 &
       !stringr::str_detect(
         tolower(unresolved_names),
@@ -182,7 +229,9 @@ search_worms_taxamatch <- function(df) {
 
   pb <- progress::progress_bar$new(
     format = "  [:bar] :percent (:current/:total) :eta",
-    total  = length(candidate_names), clear = FALSE, width = 80
+    total = length(candidate_names),
+    clear = FALSE,
+    width = 80
   )
 
   resolved_count <- 0
@@ -193,7 +242,8 @@ search_worms_taxamatch <- function(df) {
     )
 
     if (
-      !is.null(result_list) && length(result_list) > 0 &&
+      !is.null(result_list) &&
+        length(result_list) > 0 &&
         nrow(result_list[[1]]) > 0
     ) {
       best_match <- result_list[[1]][1, ]
@@ -206,11 +256,11 @@ search_worms_taxamatch <- function(df) {
           df$taxon_clean == name & is.na(df$matched_aphiaid)
         )
         for (idx in matching_indices) {
-          df$matched_aphiaid[idx]   <- as.integer(best_match$AphiaID)
-          df$matched_name[idx]      <- best_match$scientificname
-          df$accepted_name[idx]     <- best_match$valid_name %||%
+          df$matched_aphiaid[idx] <- as.integer(best_match$AphiaID)
+          df$matched_name[idx] <- best_match$scientificname
+          df$accepted_name[idx] <- best_match$valid_name %||%
             best_match$scientificname
-          df$taxonomic_status[idx]  <- best_match$status
+          df$taxonomic_status[idx] <- best_match$status
           df$resolution_method[idx] <- "worms_taxamatch"
           if (
             !is.null(best_match$valid_AphiaID) &&
@@ -219,13 +269,17 @@ search_worms_taxamatch <- function(df) {
           ) {
             df$accepted_aphiaid[idx] <- as.integer(best_match$valid_AphiaID)
             df$resolution_notes[idx] <- paste0(
-              "Taxamatch synonym: ", best_match$scientificname,
-              " \u2192 ", best_match$valid_name
+              "Taxamatch synonym: ",
+              best_match$scientificname,
+              " \u2192 ",
+              best_match$valid_name
             )
           } else if (name != best_match$scientificname) {
             df$resolution_notes[idx] <- paste0(
-              "Taxamatch correction: ", name,
-              " \u2192 ", best_match$scientificname
+              "Taxamatch correction: ",
+              name,
+              " \u2192 ",
+              best_match$scientificname
             )
           }
         }
@@ -252,13 +306,30 @@ search_worms_taxamatch <- function(df) {
 #' user to pre-initialise the resolution columns.
 #'
 #' @param df A data frame as returned by [search_worms_taxamatch()].
+#' @param col Character. Name of the column containing the cleaned taxon
+#'   names. Default `"taxon_clean"`.
 #'
 #' @return Updated `df`.
 #'
 #' @importFrom progress progress_bar
 #'
+#' @examples
+#' \dontrun{
+#' # Direct string query mode
+#' search_gbif_strict(c("Chaetoceros decipiens"))
+#'
+#' # data.frame with custom column name
+#' df <- data.frame(clean_name = c("Emiliania huxleyi"))
+#' search_gbif_strict(df, col = "clean_name")
+#' }
+#'
 #' @export
-search_gbif_strict <- function(df) {
+search_gbif_strict <- function(df, col = "taxon_clean") {
+  query_mode <- is.character(df)
+  if (query_mode) {
+    df <- names_to_df(df)
+  }
+  df <- resolve_col(df, col)
   df <- ensure_resolution_schema(df)
   cat("--- 5.3 GBIF Strict ---\n")
 
@@ -272,7 +343,9 @@ search_gbif_strict <- function(df) {
 
   pb <- progress::progress_bar$new(
     format = "  [:bar] :percent (:current/:total) :eta",
-    total  = length(unresolved_indices), clear = FALSE, width = 80
+    total = length(unresolved_indices),
+    clear = FALSE,
+    width = 80
   )
 
   resolved_count <- 0
@@ -287,13 +360,14 @@ search_gbif_strict <- function(df) {
     ) {
       matched_name <- gbif_result$scientificName
       if (cross_validate_with_worms(matched_name)) {
-        df$matched_aphiaid[i]   <- NA_integer_
-        df$matched_name[i]      <- matched_name
-        df$accepted_name[i]     <- gbif_result$canonicalName %||% matched_name
-        df$taxonomic_status[i]  <- gbif_result$taxonomicStatus %||% "unknown"
+        df$matched_aphiaid[i] <- NA_integer_
+        df$matched_name[i] <- matched_name
+        df$accepted_name[i] <- gbif_result$canonicalName %||% matched_name
+        df$taxonomic_status[i] <- gbif_result$taxonomicStatus %||% "unknown"
         df$resolution_method[i] <- "gbif_strict"
-        df$resolution_notes[i]  <- paste0(
-          "GBIF usageKey: ", gbif_result$usageKey
+        df$resolution_notes[i] <- paste0(
+          "GBIF usageKey: ",
+          gbif_result$usageKey
         )
         resolved_count <- resolved_count + 1
       }
@@ -318,14 +392,32 @@ search_gbif_strict <- function(df) {
 #' user to pre-initialise the resolution columns.
 #'
 #' @param df A data frame as returned by [search_gbif_strict()].
+#' @param col Character. Name of the column containing the cleaned taxon
+#'   names. Default `"taxon_clean"`.
 #'
 #' @return Updated `df`.
 #'
 #' @importFrom progress progress_bar
 #' @importFrom worrms wm_record
 #'
+#' @examples
+#' \dontrun{
+#' # Typically called after search_gbif_strict()
+#' df <- search_gbif_strict(c("Chaetoceros decipiens"))
+#' resolve_taxonomic_status(df)
+#'
+#' # data.frame with custom column name
+#' df2 <- data.frame(clean_name = c("Emiliania huxleyi"))
+#' resolve_taxonomic_status(df2, col = "clean_name")
+#' }
+#'
 #' @export
-resolve_taxonomic_status <- function(df) {
+resolve_taxonomic_status <- function(df, col = "taxon_clean") {
+  query_mode <- is.character(df)
+  if (query_mode) {
+    df <- names_to_df(df)
+  }
+  df <- resolve_col(df, col)
   df <- ensure_resolution_schema(df)
   cat("--- 5.4 Taxonomic Status Resolution ---\n")
 
@@ -349,7 +441,9 @@ resolve_taxonomic_status <- function(df) {
 
   pb <- progress::progress_bar$new(
     format = "  [:bar] :percent (:current/:total) :eta",
-    total  = length(needs_check), clear = FALSE, width = 80
+    total = length(needs_check),
+    clear = FALSE,
+    width = 80
   )
 
   for (i in needs_check) {
@@ -369,8 +463,10 @@ resolve_taxonomic_status <- function(df) {
           df$accepted_name[i] <- valid_record$scientificname
           if (is.na(df$resolution_notes[i]) || df$resolution_notes[i] == "") {
             df$resolution_notes[i] <- paste0(
-              "Synonym resolved: ", record$scientificname,
-              " \u2192 ", valid_record$scientificname
+              "Synonym resolved: ",
+              record$scientificname,
+              " \u2192 ",
+              valid_record$scientificname
             )
           }
         }
@@ -402,6 +498,8 @@ resolve_taxonomic_status <- function(df) {
 #' user to pre-initialise the resolution columns.
 #'
 #' @param df A data frame as returned by [resolve_taxonomic_status()].
+#' @param col Character. Name of the column containing the cleaned taxon
+#'   names. Default `"taxon_clean"`.
 #' @param fuzzy_config Named list with elements `max_levenshtein_distance`
 #'   (integer), `min_similarity_score` (numeric 0-1), and
 #'   `require_genus_match` (logical, default `TRUE`).
@@ -417,16 +515,32 @@ resolve_taxonomic_status <- function(df) {
 #' @importFrom stringr str_detect str_count word
 #' @importFrom worrms wm_records_taxamatch
 #'
+#' @examples
+#' \dontrun{
+#' # Direct string query mode
+#' search_worms_fuzzy_minor(c("Chaetoceros decipens", "Thalasiosira weissflogii"))
+#'
+#' # data.frame with custom column name
+#' df <- data.frame(clean_name = c("Skeletonema cosatum"))
+#' search_worms_fuzzy_minor(df, col = "clean_name")
+#' }
+#'
 #' @export
 search_worms_fuzzy_minor <- function(
-    df,
-    fuzzy_config = list(
-      max_levenshtein_distance = 3,
-      min_similarity_score     = 0.85,
-      require_genus_match      = TRUE
-    ),
-    ncores = 2
+  df,
+  col = "taxon_clean",
+  fuzzy_config = list(
+    max_levenshtein_distance = 3,
+    min_similarity_score = 0.85,
+    require_genus_match = TRUE
+  ),
+  ncores = 2
 ) {
+  query_mode <- is.character(df)
+  if (query_mode) {
+    df <- names_to_df(df)
+  }
+  df <- resolve_col(df, col)
   df <- ensure_resolution_schema(df)
   cat("--- 5.5 WoRMS Fuzzy (Minor Corrections) ---\n")
 
@@ -454,7 +568,9 @@ search_worms_fuzzy_minor <- function(
 
   pb <- progress::progress_bar$new(
     format = "  [:bar] :percent (:current/:total) :eta",
-    total  = nrow(candidates_df), clear = FALSE, width = 80
+    total = nrow(candidates_df),
+    clear = FALSE,
+    width = 80
   )
 
   candidates_df <- candidates_df |>
@@ -475,7 +591,8 @@ search_worms_fuzzy_minor <- function(
   candidates_df <- candidates_df |>
     dplyr::mutate(
       match_info = furrr::future_map2(
-        taxon_clean, worms_result,
+        taxon_clean,
+        worms_result,
         function(original_name, result_list) {
           if (!is.null(result_list) && length(result_list) > 0) {
             for (result_df in result_list) {
@@ -486,7 +603,8 @@ search_worms_fuzzy_minor <- function(
                     !is.na(best_match$AphiaID)
                 ) {
                   similarity <- calculate_similarity(
-                    original_name, best_match$scientificname
+                    original_name,
+                    best_match$scientificname
                   )
                   if (similarity >= fuzzy_config$min_similarity_score) {
                     genus_ok <- if (fuzzy_config$require_genus_match) {
@@ -496,12 +614,12 @@ search_worms_fuzzy_minor <- function(
                     }
                     if (genus_ok) {
                       return(list(
-                        found      = TRUE,
-                        aphiaid    = as.integer(best_match$AphiaID),
-                        name       = best_match$scientificname,
+                        found = TRUE,
+                        aphiaid = as.integer(best_match$AphiaID),
+                        name = best_match$scientificname,
                         valid_name = best_match$valid_name,
-                        valid_id   = as.integer(best_match$valid_AphiaID),
-                        status     = best_match$status,
+                        valid_id = as.integer(best_match$valid_AphiaID),
+                        status = best_match$status,
                         similarity = similarity
                       ))
                     }
@@ -523,19 +641,22 @@ search_worms_fuzzy_minor <- function(
     info <- candidates_df$match_info[[row_i]]
     if (isTRUE(info$found)) {
       idx <- candidates_df$search_idx[row_i]
-      df$matched_aphiaid[idx]   <- info$aphiaid
-      df$matched_name[idx]      <- info$name
-      df$accepted_name[idx]     <- info$valid_name %||% info$name
-      df$taxonomic_status[idx]  <- info$status
+      df$matched_aphiaid[idx] <- info$aphiaid
+      df$matched_name[idx] <- info$name
+      df$accepted_name[idx] <- info$valid_name %||% info$name
+      df$taxonomic_status[idx] <- info$status
       df$resolution_method[idx] <- "worms_fuzzy_minor"
-      df$resolution_notes[idx]  <- sprintf(
+      df$resolution_notes[idx] <- sprintf(
         "Fuzzy correction (similarity=%.2f): %s \u2192 %s",
         info$similarity,
         candidates_df$taxon_clean[row_i],
         info$name
       )
-      if (!is.null(info$valid_id) && !is.na(info$valid_id) &&
-            info$aphiaid != info$valid_id) {
+      if (
+        !is.null(info$valid_id) &&
+          !is.na(info$valid_id) &&
+          info$aphiaid != info$valid_id
+      ) {
         df$accepted_aphiaid[idx] <- info$valid_id
       }
       resolved_count <- resolved_count + 1
@@ -562,24 +683,66 @@ search_worms_fuzzy_minor <- function(
 #'
 #' @param df A data frame with at least `matched_aphiaid` and
 #'   `accepted_aphiaid` columns.
+#' @param col Character. Name of the column containing the cleaned taxon
+#'   names. Default `"taxon_clean"`.
 #'
 #' @return Updated `df` with taxonomic rank columns populated.
 #'
 #' @importFrom progress progress_bar
 #' @importFrom worrms wm_classification wm_record
 #'
+#' @examples
+#' \dontrun{
+#' # Typically called at the end of the pipeline
+#' df <- run_resolution_pipeline(c("Chaetoceros decipiens"))
+#' get_taxonomy(df)
+#'
+#' # data.frame with custom column name
+#' df2 <- data.frame(clean_name = c("Emiliania huxleyi"))
+#' get_taxonomy(df2, col = "clean_name")
+#' }
+#'
 #' @export
-get_taxonomy <- function(df) {
+get_taxonomy <- function(df, col = "taxon_clean") {
+  query_mode <- is.character(df)
+  if (query_mode) {
+    df <- names_to_df(df)
+  }
+  df <- resolve_col(df, col)
   df <- ensure_resolution_schema(df)
   cat("--- 5.6 Taxonomy Retrieval ---\n")
 
   tax_ranks <- c(
-    "kingdom", "subkingdom", "infrakingdom", "phylum", "subphylum",
-    "infraphylum", "parvphylum", "gigaclass", "superclass", "class",
-    "subclass", "infraclass", "subterclass", "superorder", "order",
-    "suborder", "infraorder", "parvorder", "superfamily", "family",
-    "subfamily", "tribe", "genus", "subgenus", "section", "subsection",
-    "species", "subspecies", "variety", "forma"
+    "kingdom",
+    "subkingdom",
+    "infrakingdom",
+    "phylum",
+    "subphylum",
+    "infraphylum",
+    "parvphylum",
+    "gigaclass",
+    "superclass",
+    "class",
+    "subclass",
+    "infraclass",
+    "subterclass",
+    "superorder",
+    "order",
+    "suborder",
+    "infraorder",
+    "parvorder",
+    "superfamily",
+    "family",
+    "subfamily",
+    "tribe",
+    "genus",
+    "subgenus",
+    "section",
+    "subsection",
+    "species",
+    "subspecies",
+    "variety",
+    "forma"
   )
 
   resolved_indices <- which(!is.na(df$matched_aphiaid))
@@ -592,7 +755,9 @@ get_taxonomy <- function(df) {
 
   pb <- progress::progress_bar$new(
     format = "  [:bar] :percent (:current/:total) :eta",
-    total  = length(resolved_indices), clear = FALSE, width = 80
+    total = length(resolved_indices),
+    clear = FALSE,
+    width = 80
   )
 
   for (i in resolved_indices) {
@@ -642,28 +807,58 @@ get_taxonomy <- function(df) {
 #'
 #' @param df A data frame produced by the cleaning pipeline (Steps 1-4),
 #'   with at least a `taxon_clean` column.
+#' @param col Character. Name of the column containing the cleaned taxon
+#'   names. Default `"taxon_clean"`.
 #' @param fuzzy_config Named list passed to [search_worms_fuzzy_minor()].
 #' @param ncores Integer. Parallel workers for the fuzzy step. Default `2`.
 #'
 #' @return The fully resolved `df`.
 #'
+#' @examples
+#' \dontrun{
+#' # Direct string query mode (returns formatted tibble)
+#' run_resolution_pipeline(c("Chaetoceros decipiens", "Emiliania huxleyi"))
+#'
+#' # data.frame with standard column
+#' df <- data.frame(taxon_clean = c("Thalassiosira weissflogii"))
+#' run_resolution_pipeline(df)
+#'
+#' # data.frame with custom column name
+#' df2 <- data.frame(clean_name = c("Skeletonema costatum"))
+#' run_resolution_pipeline(df2, col = "clean_name")
+#' }
+#'
 #' @export
 run_resolution_pipeline <- function(
-    df,
-    fuzzy_config = list(
-      max_levenshtein_distance = 3,
-      min_similarity_score     = 0.85,
-      require_genus_match      = TRUE
-    ),
-    ncores = 2
+  df,
+  col = "taxon_clean",
+  fuzzy_config = list(
+    max_levenshtein_distance = 3,
+    min_similarity_score = 0.85,
+    require_genus_match = TRUE
+  ),
+  ncores = 2
 ) {
+  query_mode <- is.character(df)
+  if (query_mode) {
+    df <- names_to_df(df)
+  }
+  df <- resolve_col(df, col)
   df <- ensure_resolution_schema(df)
-  df <- search_worms_priority(df)
-  df <- search_worms_taxamatch(df)
-  df <- search_gbif_strict(df)
-  df <- resolve_taxonomic_status(df)
-  df <- search_worms_fuzzy_minor(df, fuzzy_config = fuzzy_config, ncores = ncores)
-  df <- get_taxonomy(df)
+  df <- search_worms_priority(df, col = "taxon_clean")
+  df <- search_worms_taxamatch(df, col = "taxon_clean")
+  df <- search_gbif_strict(df, col = "taxon_clean")
+  df <- resolve_taxonomic_status(df, col = "taxon_clean")
+  df <- search_worms_fuzzy_minor(
+    df,
+    col = "taxon_clean",
+    fuzzy_config = fuzzy_config,
+    ncores = ncores
+  )
+  df <- get_taxonomy(df, col = "taxon_clean")
+  if (query_mode) {
+    return(format_query_result(df, attr(df, "original_col") %||% col))
+  }
 
   cat("=== Resolution Summary ===\n")
   cat(sprintf("  Total:      %d\n", nrow(df)))

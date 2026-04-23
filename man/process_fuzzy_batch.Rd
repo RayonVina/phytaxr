@@ -8,6 +8,7 @@ process_fuzzy_batch(
   df,
   genus_vocab,
   epithet_vocab,
+  col = "taxon_clean",
   batch_size = 10,
   checkpoint_file = "phytaxr_step6_checkpoint.rds",
   min_similarity = 0.85,
@@ -26,6 +27,9 @@ cleaning + automatic resolution pipeline).}
 \item{genus_vocab}{Character vector from \code{\link[=build_genus_vocabulary]{build_genus_vocabulary()}}.}
 
 \item{epithet_vocab}{Character vector from \code{\link[=build_epithet_vocabulary]{build_epithet_vocabulary()}}.}
+
+\item{col}{Character. Name of the column to use as the cleaned taxon name
+source. Default \code{"taxon_clean"}.}
 
 \item{batch_size}{Integer. Number of entries to process before pausing for
 continuation confirmation. Default \code{10}.}

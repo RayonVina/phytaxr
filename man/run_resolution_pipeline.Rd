@@ -6,6 +6,7 @@
 \usage{
 run_resolution_pipeline(
   df,
+  col = "taxon_clean",
   fuzzy_config = list(max_levenshtein_distance = 3, min_similarity_score = 0.85,
     require_genus_match = TRUE),
   ncores = 2
@@ -14,6 +15,9 @@ run_resolution_pipeline(
 \arguments{
 \item{df}{A data frame produced by the cleaning pipeline (Steps 1-4),
 with at least a \code{taxon_clean} column.}
+
+\item{col}{Character. Name of the column containing the cleaned taxon
+names. Default \code{"taxon_clean"}.}
 
 \item{fuzzy_config}{Named list passed to \code{\link[=search_worms_fuzzy_minor]{search_worms_fuzzy_minor()}}.}
 
@@ -30,4 +34,19 @@ resolution summary at the end. Equivalent to the §5.4 block in
 \details{
 Calls \code{\link[=ensure_resolution_schema]{ensure_resolution_schema()}} on entry so that the pipeline can be
 applied directly to the output of the cleaning pipeline.
+}
+\examples{
+\dontrun{
+# Direct string query mode (returns formatted tibble)
+run_resolution_pipeline(c("Chaetoceros decipiens", "Emiliania huxleyi"))
+
+# data.frame with standard column
+df <- data.frame(taxon_clean = c("Thalassiosira weissflogii"))
+run_resolution_pipeline(df)
+
+# data.frame with custom column name
+df2 <- data.frame(clean_name = c("Skeletonema costatum"))
+run_resolution_pipeline(df2, col = "clean_name")
+}
+
 }

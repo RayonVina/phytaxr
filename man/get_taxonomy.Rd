@@ -4,11 +4,14 @@
 \alias{get_taxonomy}
 \title{Step 5.6 -- Retrieve full WoRMS taxonomy}
 \usage{
-get_taxonomy(df)
+get_taxonomy(df, col = "taxon_clean")
 }
 \arguments{
 \item{df}{A data frame with at least \code{matched_aphiaid} and
 \code{accepted_aphiaid} columns.}
+
+\item{col}{Character. Name of the column containing the cleaned taxon
+names. Default \code{"taxon_clean"}.}
 }
 \value{
 Updated \code{df} with taxonomic rank columns populated.
@@ -22,4 +25,16 @@ columns (\code{kingdom} through \code{forma}) plus \code{rank}.
 Calls \code{\link[=ensure_resolution_schema]{ensure_resolution_schema()}} on entry so that the function can be
 used directly on the output of the cleaning pipeline without requiring the
 user to pre-initialise the resolution columns.
+}
+\examples{
+\dontrun{
+# Typically called at the end of the pipeline
+df <- run_resolution_pipeline(c("Chaetoceros decipiens"))
+get_taxonomy(df)
+
+# data.frame with custom column name
+df2 <- data.frame(clean_name = c("Emiliania huxleyi"))
+get_taxonomy(df2, col = "clean_name")
+}
+
 }
