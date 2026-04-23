@@ -82,6 +82,8 @@ cross_validate_with_worms <- function(gbif_matched_name) {
 #' user to pre-initialise the resolution columns.
 #'
 #' @param df A data frame with at least column `taxon_clean`.
+#' @param col Character. Name of the column containing the cleaned taxon
+#'   names. Default `"taxon_clean"`.
 #'
 #' @return The input `df` with resolved rows updated in-place.
 #'
@@ -160,6 +162,8 @@ search_worms_priority <- function(df, col = "taxon_clean") {
 #' user to pre-initialise the resolution columns.
 #'
 #' @param df A data frame as returned by [search_worms_priority()].
+#' @param col Character. Name of the column containing the cleaned taxon
+#'   names. Default `"taxon_clean"`.
 #'
 #' @return Updated `df`.
 #'
@@ -278,6 +282,8 @@ search_worms_taxamatch <- function(df, col = "taxon_clean") {
 #' user to pre-initialise the resolution columns.
 #'
 #' @param df A data frame as returned by [search_worms_taxamatch()].
+#' @param col Character. Name of the column containing the cleaned taxon
+#'   names. Default `"taxon_clean"`.
 #'
 #' @return Updated `df`.
 #'
@@ -352,6 +358,8 @@ search_gbif_strict <- function(df, col = "taxon_clean") {
 #' user to pre-initialise the resolution columns.
 #'
 #' @param df A data frame as returned by [search_gbif_strict()].
+#' @param col Character. Name of the column containing the cleaned taxon
+#'   names. Default `"taxon_clean"`.
 #'
 #' @return Updated `df`.
 #'
@@ -445,6 +453,8 @@ resolve_taxonomic_status <- function(df, col = "taxon_clean") {
 #' user to pre-initialise the resolution columns.
 #'
 #' @param df A data frame as returned by [resolve_taxonomic_status()].
+#' @param col Character. Name of the column containing the cleaned taxon
+#'   names. Default `"taxon_clean"`.
 #' @param fuzzy_config Named list with elements `max_levenshtein_distance`
 #'   (integer), `min_similarity_score` (numeric 0-1), and
 #'   `require_genus_match` (logical, default `TRUE`).
@@ -618,6 +628,8 @@ search_worms_fuzzy_minor <- function(
 #'
 #' @param df A data frame with at least `matched_aphiaid` and
 #'   `accepted_aphiaid` columns.
+#' @param col Character. Name of the column containing the cleaned taxon
+#'   names. Default `"taxon_clean"`.
 #'
 #' @return Updated `df` with taxonomic rank columns populated.
 #'
@@ -729,6 +741,8 @@ get_taxonomy <- function(df, col = "taxon_clean") {
 #'
 #' @param df A data frame produced by the cleaning pipeline (Steps 1-4),
 #'   with at least a `taxon_clean` column.
+#' @param col Character. Name of the column containing the cleaned taxon
+#'   names. Default `"taxon_clean"`.
 #' @param fuzzy_config Named list passed to [search_worms_fuzzy_minor()].
 #' @param ncores Integer. Parallel workers for the fuzzy step. Default `2`.
 #'
