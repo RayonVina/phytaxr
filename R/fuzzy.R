@@ -1561,12 +1561,7 @@ process_fuzzy_batch <- function(
     }
     if (!is.null(ckpt$epithet_vocab)) epithet_vocab <- ckpt$epithet_vocab
   }
-  if (!"taxon_clean" %in% names(df)) {
-    stop(sprintf(
-      "Column 'taxon_clean' not found in data frame. Available columns: %s",
-      paste(names(df), collapse = ", ")
-    ))
-  }
+  df <- resolve_col(df, col)
   df <- ensure_resolution_schema(df)
 
   unresolved_idx <- which(
