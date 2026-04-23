@@ -6,6 +6,7 @@
 \usage{
 search_worms_fuzzy_minor(
   df,
+  col = "taxon_clean",
   fuzzy_config = list(max_levenshtein_distance = 3, min_similarity_score = 0.85,
     require_genus_match = TRUE),
   ncores = 2
@@ -13,6 +14,9 @@ search_worms_fuzzy_minor(
 }
 \arguments{
 \item{df}{A data frame as returned by \code{\link[=resolve_taxonomic_status]{resolve_taxonomic_status()}}.}
+
+\item{col}{Character. Name of the column containing the cleaned taxon
+names. Default \code{"taxon_clean"}.}
 
 \item{fuzzy_config}{Named list with elements \code{max_levenshtein_distance}
 (integer), \code{min_similarity_score} (numeric 0-1), and
@@ -34,4 +38,15 @@ exist in WoRMS.
 Calls \code{\link[=ensure_resolution_schema]{ensure_resolution_schema()}} on entry so that the function can be
 used directly on the output of the cleaning pipeline without requiring the
 user to pre-initialise the resolution columns.
+}
+\examples{
+\dontrun{
+# Direct string query mode
+search_worms_fuzzy_minor(c("Chaetoceros decipens", "Thalasiosira weissflogii"))
+
+# data.frame with custom column name
+df <- data.frame(clean_name = c("Skeletonema cosatum"))
+search_worms_fuzzy_minor(df, col = "clean_name")
+}
+
 }

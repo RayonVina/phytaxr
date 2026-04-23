@@ -4,10 +4,13 @@
 \alias{search_worms_priority}
 \title{Step 5.1 -- WoRMS exact search}
 \usage{
-search_worms_priority(df)
+search_worms_priority(df, col = "taxon_clean")
 }
 \arguments{
 \item{df}{A data frame with at least column \code{taxon_clean}.}
+
+\item{col}{Character. Name of the column containing the cleaned taxon
+names. Default \code{"taxon_clean"}.}
 }
 \value{
 The input \code{df} with resolved rows updated in-place.
@@ -21,4 +24,19 @@ using \code{\link[=worms_robust_search]{worms_robust_search()}}. Fills \code{mat
 Calls \code{\link[=ensure_resolution_schema]{ensure_resolution_schema()}} on entry so that the function can be
 used directly on the output of the cleaning pipeline without requiring the
 user to pre-initialise the resolution columns.
+}
+\examples{
+\dontrun{
+# Direct string query mode
+search_worms_priority(c("Chaetoceros decipiens", "Emiliania huxleyi"))
+
+# data.frame with standard column
+df <- data.frame(taxon_clean = c("Thalassiosira weissflogii", "Skeletonema costatum"))
+search_worms_priority(df)
+
+# data.frame with custom column name
+df2 <- data.frame(clean_name = c("Chaetoceros debilis"))
+search_worms_priority(df2, col = "clean_name")
+}
+
 }

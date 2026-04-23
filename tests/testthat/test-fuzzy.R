@@ -29,7 +29,7 @@ test_that("build_genus_vocabulary() returns empty vector when all NA", {
 
 test_that("build_epithet_vocabulary() extracts epithets correctly", {
   df <- data.frame(
-    genus   = c("Thalassiosira", "Chaetoceros"),
+    genus = c("Thalassiosira", "Chaetoceros"),
     species = c("Thalassiosira weissflogii", "Chaetoceros debilis"),
     stringsAsFactors = FALSE
   )
@@ -41,7 +41,7 @@ test_that("build_epithet_vocabulary() extracts epithets correctly", {
 
 test_that("build_epithet_vocabulary() excludes short epithets (< 4 chars)", {
   df <- data.frame(
-    genus   = "Genus",
+    genus = "Genus",
     species = "Genus sp",
     stringsAsFactors = FALSE
   )
@@ -51,7 +51,7 @@ test_that("build_epithet_vocabulary() excludes short epithets (< 4 chars)", {
 
 test_that("build_epithet_vocabulary() returns empty vector when species is NA", {
   df <- data.frame(
-    genus   = "Thalassiosira",
+    genus = "Thalassiosira",
     species = NA_character_,
     stringsAsFactors = FALSE
   )
@@ -78,6 +78,38 @@ test_that("normalize_taxonomic_name() returns original if no rule applies", {
   expect_equal(result, "Skeletonema costatum")
 })
 
-# apply_resolution() -----------------------------------------------------
-# Tests for apply_resolution() and save_progress() removed: they depended on
-# initialize_taxonomy_df() which was removed from the package.
+# process_fuzzy_batch() col parameter ------------------------------------
+
+test_that("process_fuzzy_batch errors when col does not exist", {
+  df <- data.frame(
+    taxon_clean = c("Chaetoceros decipiens"),
+    matched_aphiaid = NA_integer_,
+    stringsAsFactors = FALSE
+  )
+  expect_error(
+    process_fuzzy_batch(
+      df,
+      genus_vocab = character(0),
+      epithet_vocab = character(0),
+      col = "nonexistent_col"
+    ),
+    regexp = "not found|nonexistent_col|Column"
+  )
+})
+
+test_that("process_fuzzy_batch accepts a custom col on already-resolved rows", {
+  df <- data.frame(
+    clean_name = c("Chaetoceros decipiens"),
+    taxon_clean = c("Chaetoceros decipiens"),
+    matched_aphiaid = 1L, # already resolved: loop should not execute
+    stringsAsFactors = FALSE
+  )
+  result <- process_fuzzy_batch(
+    df,
+    genus_vocab = character(0),
+    epithet_vocab = character(0),
+    col = "clean_name",
+    checkpoint_file = NULL
+  )
+  expect_s3_class(result, "data.frame")
+})

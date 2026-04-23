@@ -89,6 +89,20 @@ cross_validate_with_worms <- function(gbif_matched_name) {
 #'
 #' @importFrom progress progress_bar
 #'
+#' @examples
+#' \dontrun{
+#' # Direct string query mode
+#' search_worms_priority(c("Chaetoceros decipiens", "Emiliania huxleyi"))
+#'
+#' # data.frame with standard column
+#' df <- data.frame(taxon_clean = c("Thalassiosira weissflogii", "Skeletonema costatum"))
+#' search_worms_priority(df)
+#'
+#' # data.frame with custom column name
+#' df2 <- data.frame(clean_name = c("Chaetoceros debilis"))
+#' search_worms_priority(df2, col = "clean_name")
+#' }
+#'
 #' @export
 search_worms_priority <- function(df, col = "taxon_clean") {
   query_mode <- is.character(df)
@@ -170,6 +184,16 @@ search_worms_priority <- function(df, col = "taxon_clean") {
 #' @importFrom progress progress_bar
 #' @importFrom stringr str_detect
 #' @importFrom worrms wm_records_taxamatch
+#'
+#' @examples
+#' \dontrun{
+#' # Direct string query mode
+#' search_worms_taxamatch(c("Chaetoceros decipens", "Emiliania huxley"))
+#'
+#' # data.frame with custom column name
+#' df <- data.frame(clean_name = c("Thalasiosira weissflogii"))
+#' search_worms_taxamatch(df, col = "clean_name")
+#' }
 #'
 #' @export
 search_worms_taxamatch <- function(df, col = "taxon_clean") {
@@ -289,6 +313,16 @@ search_worms_taxamatch <- function(df, col = "taxon_clean") {
 #'
 #' @importFrom progress progress_bar
 #'
+#' @examples
+#' \dontrun{
+#' # Direct string query mode
+#' search_gbif_strict(c("Chaetoceros decipiens"))
+#'
+#' # data.frame with custom column name
+#' df <- data.frame(clean_name = c("Emiliania huxleyi"))
+#' search_gbif_strict(df, col = "clean_name")
+#' }
+#'
 #' @export
 search_gbif_strict <- function(df, col = "taxon_clean") {
   query_mode <- is.character(df)
@@ -365,6 +399,17 @@ search_gbif_strict <- function(df, col = "taxon_clean") {
 #'
 #' @importFrom progress progress_bar
 #' @importFrom worrms wm_record
+#'
+#' @examples
+#' \dontrun{
+#' # Typically called after search_gbif_strict()
+#' df <- search_gbif_strict(c("Chaetoceros decipiens"))
+#' resolve_taxonomic_status(df)
+#'
+#' # data.frame with custom column name
+#' df2 <- data.frame(clean_name = c("Emiliania huxleyi"))
+#' resolve_taxonomic_status(df2, col = "clean_name")
+#' }
 #'
 #' @export
 resolve_taxonomic_status <- function(df, col = "taxon_clean") {
@@ -469,6 +514,16 @@ resolve_taxonomic_status <- function(df, col = "taxon_clean") {
 #' @importFrom purrr map
 #' @importFrom stringr str_detect str_count word
 #' @importFrom worrms wm_records_taxamatch
+#'
+#' @examples
+#' \dontrun{
+#' # Direct string query mode
+#' search_worms_fuzzy_minor(c("Chaetoceros decipens", "Thalasiosira weissflogii"))
+#'
+#' # data.frame with custom column name
+#' df <- data.frame(clean_name = c("Skeletonema cosatum"))
+#' search_worms_fuzzy_minor(df, col = "clean_name")
+#' }
 #'
 #' @export
 search_worms_fuzzy_minor <- function(
@@ -636,6 +691,17 @@ search_worms_fuzzy_minor <- function(
 #' @importFrom progress progress_bar
 #' @importFrom worrms wm_classification wm_record
 #'
+#' @examples
+#' \dontrun{
+#' # Typically called at the end of the pipeline
+#' df <- run_resolution_pipeline(c("Chaetoceros decipiens"))
+#' get_taxonomy(df)
+#'
+#' # data.frame with custom column name
+#' df2 <- data.frame(clean_name = c("Emiliania huxleyi"))
+#' get_taxonomy(df2, col = "clean_name")
+#' }
+#'
 #' @export
 get_taxonomy <- function(df, col = "taxon_clean") {
   query_mode <- is.character(df)
@@ -748,6 +814,20 @@ get_taxonomy <- function(df, col = "taxon_clean") {
 #'
 #' @return The fully resolved `df`.
 #'
+#' @examples
+#' \dontrun{
+#' # Direct string query mode (returns formatted tibble)
+#' run_resolution_pipeline(c("Chaetoceros decipiens", "Emiliania huxleyi"))
+#'
+#' # data.frame with standard column
+#' df <- data.frame(taxon_clean = c("Thalassiosira weissflogii"))
+#' run_resolution_pipeline(df)
+#'
+#' # data.frame with custom column name
+#' df2 <- data.frame(clean_name = c("Skeletonema costatum"))
+#' run_resolution_pipeline(df2, col = "clean_name")
+#' }
+#'
 #' @export
 run_resolution_pipeline <- function(
   df,
@@ -765,16 +845,17 @@ run_resolution_pipeline <- function(
   }
   df <- resolve_col(df, col)
   df <- ensure_resolution_schema(df)
-  df <- search_worms_priority(df)
-  df <- search_worms_taxamatch(df)
-  df <- search_gbif_strict(df)
-  df <- resolve_taxonomic_status(df)
+  df <- search_worms_priority(df, col = "taxon_clean")
+  df <- search_worms_taxamatch(df, col = "taxon_clean")
+  df <- search_gbif_strict(df, col = "taxon_clean")
+  df <- resolve_taxonomic_status(df, col = "taxon_clean")
   df <- search_worms_fuzzy_minor(
     df,
+    col = "taxon_clean",
     fuzzy_config = fuzzy_config,
     ncores = ncores
   )
-  df <- get_taxonomy(df)
+  df <- get_taxonomy(df, col = "taxon_clean")
   if (query_mode) {
     return(format_query_result(df, attr(df, "original_col") %||% col))
   }
