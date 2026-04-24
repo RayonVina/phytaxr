@@ -2,7 +2,7 @@
 
 <!-- badges: start -->
 ![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)
-![Version: 0.0.1](https://img.shields.io/badge/version-0.0.1-blue.svg)
+![Version: 0.1.0](https://img.shields.io/badge/version-0.1.0-blue.svg)
 <!-- badges: end -->
 
 **PhyTaxR** provides tools for cleaning, standardising, and resolving
@@ -36,7 +36,8 @@ The package implements a two-stage pipeline:
    classification from kingdom to forma.
 
 Both stages operate on plain data frames and are designed to be chained
-with the `|>` pipe.
+with the `|>` pipe. Resolution functions also accept a bare character
+vector directly, and support a custom column name via the `col` argument.
 
 ---
 
@@ -79,20 +80,32 @@ df_clean <- df |>
   clean_trailing_hyphens()
 
 # ── Stage 2: Resolution ────────────────────────────────────────────
-# 2a. WoRMS exact match
-df_res <- search_worms_priority(df_clean)
+# Run all steps in one call (recommended)
+df_res <- run_resolution_pipeline(df_clean)
 
-# 2b. WoRMS taxamatch (for names not resolved above)
-df_res <- search_worms_taxamatch(df_res)
-
-# 2c. GBIF strict match (cross-validated against WoRMS)
-df_res <- search_gbif_strict(df_res)
-
-# 2d. Fuzzy minor correction (Levenshtein ≤ 3, similarity ≥ 0.85)
-df_res <- search_fuzzy_minor(df_res)
+# Or step by step:
+df_res <- search_worms_priority(df_clean)       # 5.1 WoRMS exact
+df_res <- search_worms_taxamatch(df_res)         # 5.2 WoRMS taxamatch
+df_res <- search_gbif_strict(df_res)             # 5.3 GBIF strict
+df_res <- resolve_taxonomic_status(df_res)       # 5.4 Resolve synonyms
+df_res <- search_worms_fuzzy_minor(df_res)       # 5.5 Fuzzy minor corrections
+df_res <- get_taxonomy(df_res)                   # 5.6 Full classification
 
 # Inspect
 dplyr::glimpse(df_res)
+```
+
+Resolution functions also work directly on a character vector:
+
+```r
+search_worms_priority(c("Chaetoceros debilis", "Thalassiosira weissflogii"))
+```
+
+And accept a custom column name via `col`:
+
+```r
+# If your taxon column is named "species" instead of "taxon_clean"
+search_worms_priority(df, col = "species")
 ```
 
 ---
@@ -131,13 +144,17 @@ it modified. They must be called in order.
 
 | Step | Function | Method |
 |------|----------|--------|
-| 1 | `search_worms_priority()` | WoRMS exact match via `wm_name2id()` + `wm_record()` |
-| 2 | `search_worms_taxamatch()` | WoRMS fuzzy match via `wm_records_taxamatch()` |
-| 3 | `search_gbif_strict()` | GBIF name match API, confidence ≥ 99, cross-validated against WoRMS |
-| 4 | `search_fuzzy_minor()` | Levenshtein ≤ 3, similarity ≥ 0.85, genus verified in WoRMS |
+| 5.1 | `search_worms_priority()` | WoRMS exact match via `wm_name2id()` + `wm_record()` |
+| 5.2 | `search_worms_taxamatch()` | WoRMS fuzzy match via `wm_records_taxamatch()` |
+| 5.3 | `search_gbif_strict()` | GBIF name match API, confidence ≥ 99, cross-validated against WoRMS |
+| 5.4 | `resolve_taxonomic_status()` | Follows `valid_AphiaID` pointer to resolve synonyms to accepted names |
+| 5.5 | `search_worms_fuzzy_minor()` | Levenshtein ≤ 3, similarity ≥ 0.85, genus verified in WoRMS |
+| 5.6 | `get_taxonomy()` | Retrieves full taxonomic hierarchy (kingdom → forma) from WoRMS |
 
-All four functions share the same interface: they accept a data frame and
-return it with resolution columns populated for previously unresolved rows.
+All six functions share the same interface: they accept a data frame (or
+character vector) and return it with resolution columns populated for
+previously unresolved rows. All steps are also available as a single call
+via `run_resolution_pipeline()`.
 
 ---
 
@@ -204,7 +221,7 @@ vernacular_remove("green alga")
 If you use **PhyTaxR** in published work, please cite it as:
 
 > Rayón Viña, F. (2026). *PhyTaxR: Phytoplankton Taxonomic Curation Tools*.
-> R package version 0.0.1.
+> R package version 0.1.0.
 > <https://github.com/RayonVina/phytaxr>
 
 ---
