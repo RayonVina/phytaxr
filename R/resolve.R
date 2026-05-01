@@ -260,7 +260,7 @@ lookup_taxonomy_info <- function(aphiaid_val, lookup) {
 #'   columns added and initialised to \code{NA}.
 #'
 #' @importFrom stats setNames
-#' @keywords internal
+#' @export
 ensure_resolution_schema <- function(df) {
   resolution_cols <- list(
     matched_aphiaid = NA_integer_,
@@ -271,7 +271,9 @@ ensure_resolution_schema <- function(df) {
     resolution_method = NA_character_,
     resolution_notes = NA_character_,
     rank = NA_character_,
-    flag_for_removal = FALSE
+    flag_for_removal = FALSE,
+    aphiaid = NA_integer_,
+    marginalia = NA_character_
   )
 
   tax_ranks <- c(
