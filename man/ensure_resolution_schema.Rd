@@ -27,4 +27,3 @@ function (\code{search_worms_priority()}, \code{search_worms_taxamatch()},
 manually. When all columns are already present the function returns
 \code{df} unchanged with virtually no overhead.
 }
-\keyword{internal}
