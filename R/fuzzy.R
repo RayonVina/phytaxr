@@ -772,6 +772,20 @@ search_worms_fuzzy_suggestions <- function(
           all_records <- c(all_records, l4)
         }
 
+        if (
+          !has_good(all_records) &&
+            nchar(trimws(gsub("\\.", "", words[2]))) <= 2
+        ) {
+          binomial_direct <- paste(genus, suffix)
+          cat(sprintf(
+            " -> L4b: abbreviated initial '%s', trying direct binomial '%s'...\n",
+            words[2],
+            binomial_direct
+          ))
+          l4b <- worms_query(binomial_direct, tag_binomial = FALSE)
+          if (!is.null(l4b)) all_records <- c(all_records, l4b)
+        }
+
         if (!has_good(all_records)) {
           query_l5 <- paste(genus, stem_of(words[2]))
           cat(sprintf(
@@ -855,11 +869,19 @@ search_worms_fuzzy_suggestions <- function(
         is_binomial_match ~ pmin(similarity + 0.10, 1.0),
         TRUE ~ similarity
       ),
+      epithet_ref <- if (
+        n_words >= 3 &&
+          !is.na(suffix) &&
+          nchar(trimws(gsub("\\.", "", words[2]))) <= 2
+      ) {
+        suffix
+      } else {
+        words[2]
+      },
       epithet_jw = purrr::map_dbl(scientificname, function(nm) {
         w1 <- strsplit(tolower(nm), "[\\s-]+")[[1]]
-        w2 <- strsplit(tolower(taxon_clean), "[\\s-]+")[[1]]
-        if (length(w1) >= 2 && length(w2) >= 2) {
-          1 - stringdist::stringdist(w1[2], w2[2], method = "jw")
+        if (length(w1) >= 2) {
+          1 - stringdist::stringdist(w1[2], epithet_ref, method = "jw")
         } else {
           0
         }
