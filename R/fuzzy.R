@@ -1651,7 +1651,7 @@ process_fuzzy_batch <- function(
       } else if (user_choice$action == "flag_for_removal") {
         df$flag_for_removal[idx] <- TRUE
         cat(" Flagged for removal.\n")
-        save_progress(df, checkpoint_file)
+        save_progress(df, checkpoint_file, genus_vocab, epithet_vocab)
         next
       } else if (user_choice$action == "expert_review") {
         df$resolution_method[idx] <- "expert_review"
@@ -1791,7 +1791,7 @@ process_fuzzy_batch <- function(
             cat(" Notes added.\n")
           }
 
-          save_progress(df, checkpoint_file)
+          save_progress(df, checkpoint_file, genus_vocab, epithet_vocab)
           break
         }
 
@@ -1805,12 +1805,12 @@ process_fuzzy_batch <- function(
           } else if (post_retry_action == "flag_for_removal") {
             df$flag_for_removal[idx] <- TRUE
             cat(" Flagged for removal.\n")
-            save_progress(df, checkpoint_file)
+            save_progress(df, checkpoint_file, genus_vocab, epithet_vocab)
           } else if (post_retry_action == "expert_review") {
             df$resolution_method[idx] <- "expert_review"
             df$resolution_notes[idx] <- "To be reviewed by an expert"
             cat(" Marked for expert review.\n")
-            save_progress(df, checkpoint_file)
+            save_progress(df, checkpoint_file, genus_vocab, epithet_vocab)
           }
         }
       }
