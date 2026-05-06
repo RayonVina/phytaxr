@@ -868,6 +868,19 @@ search_worms_fuzzy_suggestions <- function(
     words[2]
   }
 
+  epithet_jw_vec <- vapply(
+    unique_records$scientificname,
+    function(nm) {
+      w1 <- strsplit(tolower(nm), "[\\s-]+")[[1]]
+      if (length(w1) >= 2) {
+        1 - stringdist::stringdist(w1[2], epithet_ref, method = "jw")
+      } else {
+        0
+      }
+    },
+    numeric(1)
+  )
+
   unique_records <- unique_records |>
     dplyr::mutate(
       similarity = purrr::map_dbl(
@@ -879,19 +892,7 @@ search_worms_fuzzy_suggestions <- function(
         is_binomial_match ~ pmin(similarity + 0.10, 1.0),
         TRUE ~ similarity
       ),
-      epithet_jw = purrr::map_dbl(
-        scientificname,
-        (function(ep_ref) {
-          function(nm) {
-            w1 <- strsplit(tolower(nm), "[\\s-]+")[[1]]
-            if (length(w1) >= 2) {
-              1 - stringdist::stringdist(w1[2], ep_ref, method = "jw")
-            } else {
-              0
-            }
-          }
-        })(epithet_ref)
-      )
+      epithet_jw = epithet_jw_vec
     ) |>
     dplyr::arrange(
       dplyr::desc(adjusted_similarity),
