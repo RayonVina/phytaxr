@@ -858,6 +858,16 @@ search_worms_fuzzy_suggestions <- function(
 
   cat(sprintf(" -> %d unique records\n", nrow(unique_records)))
 
+  epithet_ref <- if (
+    n_words >= 3 &&
+      !is.na(suffix) &&
+      nchar(trimws(gsub("\\.", "", words[2]))) <= 2
+  ) {
+    suffix
+  } else {
+    words[2]
+  }
+
   unique_records <- unique_records |>
     dplyr::mutate(
       similarity = purrr::map_dbl(
@@ -869,15 +879,6 @@ search_worms_fuzzy_suggestions <- function(
         is_binomial_match ~ pmin(similarity + 0.10, 1.0),
         TRUE ~ similarity
       ),
-      epithet_ref <- if (
-        n_words >= 3 &&
-          !is.na(suffix) &&
-          nchar(trimws(gsub("\\.", "", words[2]))) <= 2
-      ) {
-        suffix
-      } else {
-        words[2]
-      },
       epithet_jw = purrr::map_dbl(scientificname, function(nm) {
         w1 <- strsplit(tolower(nm), "[\\s-]+")[[1]]
         if (length(w1) >= 2) {
