@@ -879,14 +879,19 @@ search_worms_fuzzy_suggestions <- function(
         is_binomial_match ~ pmin(similarity + 0.10, 1.0),
         TRUE ~ similarity
       ),
-      epithet_jw = purrr::map_dbl(scientificname, function(nm) {
-        w1 <- strsplit(tolower(nm), "[\\s-]+")[[1]]
-        if (length(w1) >= 2) {
-          1 - stringdist::stringdist(w1[2], epithet_ref, method = "jw")
-        } else {
-          0
-        }
-      })
+      epithet_jw = purrr::map_dbl(
+        scientificname,
+        (function(ep_ref) {
+          function(nm) {
+            w1 <- strsplit(tolower(nm), "[\\s-]+")[[1]]
+            if (length(w1) >= 2) {
+              1 - stringdist::stringdist(w1[2], ep_ref, method = "jw")
+            } else {
+              0
+            }
+          }
+        })(epithet_ref)
+      )
     ) |>
     dplyr::arrange(
       dplyr::desc(adjusted_similarity),
