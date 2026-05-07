@@ -58,39 +58,39 @@ df <- tibble(taxon = c(
 
 # ── Stage 1: Cleaning ──────────────────────────────────────────────
 df_clean <- df |>
-  normalize_characters()                  |>
-  process_taxonomic_prefixes()            |>
-  process_incertae_entries()              |>
-  process_sp_entries()                    |>
-  process_bracket_entries()               |>
-  move_size_to_epithet()                  |>
-  process_epithet_entries()               |>
-  normalize_infraspecific_ranks()         |>
-  remove_dots()                           |>
-  move_reproductive_structures()          |>
-  move_uncertainty_descriptors()          |>
-  move_morphological_descriptors()        |>
-  move_with_descriptors()                 |>
-  move_formia_to_epithet()                |>
-  move_commas_to_epithet()                |>
-  move_authors_to_epithet()               |>
-  remove_sp_tokens()                      |>
-  split_separator_entries()               |>
-  process_generic_taxa()                  |>
-  clean_trailing_hyphens()               |>
-  remove_short_interstitial_tokens()
+  normalize_characters()                 |> # encoding, diacritics, invisible spaces
+  process_taxonomic_prefixes()           |> # O./C./F./P. rank prefixes
+  process_incertae_entries()             |> # cf., aff., incertae sedis, s.l., etc.
+  process_sp_entries()                   |> # sp., spp., sp1, etc.
+  process_bracket_entries()              |> # bracket-delimited qualifiers []
+  move_size_to_epithet()                 |> # size annotations (µm, mm, ranges)
+  process_epithet_entries()              |> # parenthesised epithets
+  normalize_infraspecific_ranks()        |> # var., subsp., f., ssp., cv.
+  remove_dots()                          |> # stray dots (protects rank dots)
+  move_reproductive_structures()         |> # cysts, spores, filaments, …
+  move_uncertainty_descriptors()         |> # unidentified, unknown, unclassified, …
+  move_morphological_descriptors()       |> # centric, pennate, fusiform, …
+  move_with_descriptors()                |> # "with …" phrases
+  move_formia_to_epithet()               |> # forma designations
+  move_commas_to_epithet()               |> # post-comma strings
+  move_authors_to_epithet()              |> # authorships and dates
+  remove_sp_tokens()                     |> # residual sp/spp/ssp in epithet
+  split_separator_entries()              |> # unfold /, &, +, or entries
+  process_generic_taxa()                 |> # vernacular → scientific name
+  clean_trailing_hyphens()              |> # trailing/isolated hyphens
+  remove_short_interstitial_tokens()        # 1–2 char genus abbreviation artefacts
 
 # ── Stage 2: Resolution ────────────────────────────────────────────
 # Run all steps in one call (recommended)
 df_res <- run_resolution_pipeline(df_clean)
 
 # Or step by step:
-df_res <- search_worms_priority(df_clean)       # 5.1 WoRMS exact
-df_res <- search_worms_taxamatch(df_res)         # 5.2 WoRMS taxamatch
-df_res <- search_gbif_strict(df_res)             # 5.3 GBIF strict
-df_res <- resolve_taxonomic_status(df_res)       # 5.4 Resolve synonyms
-df_res <- search_worms_fuzzy_minor(df_res)       # 5.5 Fuzzy minor corrections
-df_res <- get_taxonomy(df_res)                   # 5.6 Full classification
+df_res <- search_worms_priority(df_clean)     # 1. WoRMS exact
+df_res <- search_worms_taxamatch(df_res)       # 2. WoRMS taxamatch
+df_res <- search_gbif_strict(df_res)           # 3. GBIF strict
+df_res <- resolve_taxonomic_status(df_res)     # 4. Resolve synonyms
+df_res <- search_worms_fuzzy_minor(df_res)     # 5. Fuzzy minor corrections
+df_res <- get_taxonomy(df_res)                 # 6. Full classification
 
 # Inspect
 dplyr::glimpse(df_res)
@@ -146,12 +146,12 @@ it modified. They must be called in order.
 
 | Step | Function | Method |
 |------|----------|--------|
-| 5.1 | `search_worms_priority()` | WoRMS exact match via `wm_name2id()` + `wm_record()` |
-| 5.2 | `search_worms_taxamatch()` | WoRMS fuzzy match via `wm_records_taxamatch()` |
-| 5.3 | `search_gbif_strict()` | GBIF name match API, confidence ≥ 99, cross-validated against WoRMS |
-| 5.4 | `resolve_taxonomic_status()` | Follows `valid_AphiaID` pointer to resolve synonyms to accepted names |
-| 5.5 | `search_worms_fuzzy_minor()` | Levenshtein ≤ 3, similarity ≥ 0.85, genus verified in WoRMS |
-| 5.6 | `get_taxonomy()` | Retrieves full taxonomic hierarchy (kingdom → forma) from WoRMS |
+| 1 | `search_worms_priority()` | WoRMS exact match via `wm_name2id()` + `wm_record()` |
+| 2 | `search_worms_taxamatch()` | WoRMS fuzzy match via `wm_records_taxamatch()` |
+| 3 | `search_gbif_strict()` | GBIF name match API, confidence ≥ 99, cross-validated against WoRMS |
+| 4 | `resolve_taxonomic_status()` | Follows `valid_AphiaID` pointer to resolve synonyms to accepted names |
+| 5 | `search_worms_fuzzy_minor()` | Levenshtein ≤ 3, similarity ≥ 0.85, genus verified in WoRMS |
+| 6 | `get_taxonomy()` | Retrieves full taxonomic hierarchy (kingdom → forma) from WoRMS |
 
 All six functions share the same interface: they accept a data frame (or
 character vector) and return it with resolution columns populated for
