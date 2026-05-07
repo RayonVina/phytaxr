@@ -650,7 +650,7 @@ search_worms_fuzzy_suggestions <- function(
     all_records <- c(all_records, l1)
   }
 
-  if (n_words >= 2 && length(genus_vocab) > 0) {
+  if (length(genus_vocab) > 0) {
     cat(sprintf(" -> L1b: edit-distance genus (input: '%s')...\n", genus))
     ed <- search_by_edit_distance(
       taxon_clean,
@@ -690,7 +690,7 @@ search_worms_fuzzy_suggestions <- function(
     if (!is.null(lc)) all_records <- c(all_records, lc)
   }
 
-  if (!has_good(all_records) && n_words >= 2) {
+  if (!has_good(all_records)) {
     cat(sprintf(" -> L1d: WoRMS fuzzy genus lookup '%s'...\n", genus))
     genus_fz <- worms_with_timeout(
       worms_rest_byname(genus, fuzzy = TRUE),
@@ -708,7 +708,11 @@ search_worms_fuzzy_suggestions <- function(
       if (nrow(genus_hits) > 0) {
         cat(sprintf(" -> L1d: %d genus candidate(s)\n", nrow(genus_hits)))
         for (g in genus_hits$scientificname) {
-          candidate <- paste(g, paste(words[-1], collapse = " "))
+          candidate <- if (n_words >= 2) {
+            paste(g, paste(words[-1], collapse = " "))
+          } else {
+            g
+          }
           cat(sprintf(" -> L1d: trying '%s'...\n", candidate))
           l1d_recs <- worms_query(candidate)
           if (!is.null(l1d_recs)) {
@@ -1148,6 +1152,32 @@ prompt_fuzzy_suggestions <- function(suggestions, original_taxon, taxon_clean) {
 
     if (!has_suggestions) {
       cat("No suggestions found.\n")
+      cat(sprintf(" Trying WoRMS fuzzy fallback for '%s'...\n", taxon_clean))
+      fuzzy_raw <- worms_with_timeout(
+        worrms::wm_records_name(taxon_clean, fuzzy = TRUE, marine_only = FALSE),
+        timeout_sec = 10
+      )
+      if (!is.null(fuzzy_raw) && nrow(fuzzy_raw) > 0) {
+        n_show <- min(nrow(fuzzy_raw), 5)
+        cat("WoRMS fuzzy results:\n")
+        for (i in seq_len(n_show)) {
+          cat(sprintf(
+            " [%d] %s\n     Status: %-12s AphiaID: %d\n",
+            i,
+            fuzzy_raw$scientificname[i],
+            fuzzy_raw$status[i],
+            fuzzy_raw$AphiaID[i]
+          ))
+          options[[as.character(counter)]] <- list(
+            aphiaid = fuzzy_raw$AphiaID[i],
+            type = "manual",
+            name = fuzzy_raw$scientificname[i],
+            binomial_suffix = NA_character_
+          )
+          counter <- counter + 1
+        }
+        has_suggestions <- TRUE
+      }
     }
 
     cat(strrep("-", 70), "\n", sep = "")
