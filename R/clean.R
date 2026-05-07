@@ -1022,3 +1022,45 @@ clean_trailing_hyphens <- function(df) {
         stringr::str_squish()
     )
 }
+
+#' Remove short ambiguous genus abbreviation tokens
+#'
+#' After the cleaning pipeline, tokens of 1-2 characters (e.g. `p`, `p-n`,
+#' `cf`) that remain stranded between the genus and the specific epithet are
+#' artefacts of patterns like "Genus sp cf G epithet" where `G` is an informal
+#' abbreviation of the genus name. This function removes those tokens from
+#' `taxon_clean` and sets `uncertain = TRUE` when it was not already set.
+#'
+#' This function should be called as the **last step** of the cleaning pipeline,
+#' after [clean_trailing_hyphens()].
+#'
+#' @param df A data frame processed by [clean_trailing_hyphens()].
+#' @return The input data frame with updated `taxon_clean` and `uncertain`.
+#' @importFrom dplyr mutate if_else
+#' @importFrom stringr str_detect str_replace str_squish regex
+#' @export
+remove_short_interstitial_tokens <- function(df) {
+  # Matches: GENUS<space>TOKEN<space>EPITHET
+  # where TOKEN is 1-2 lowercase letters or a 1-2 letter hyphenated pair (p-n)
+  # and EPITHET is at least 3 characters (to avoid matching real binomials
+  # like "Genus sp" after sp removal or initials like "T. weissflogii").
+  short_token_pattern <- stringr::regex(
+    "^([A-Za-z][a-z-]+)\\s+([a-z]{1,2}(?:-[a-z]{1,2})?)\\s+([a-z]{3,}.*)$"
+  )
+  df |>
+    dplyr::mutate(
+      has_short_token = stringr::str_detect(taxon_clean, short_token_pattern),
+      uncertain = dplyr::if_else(has_short_token, TRUE, uncertain),
+      taxon_clean = dplyr::if_else(
+        has_short_token,
+        stringr::str_replace(
+          taxon_clean,
+          short_token_pattern,
+          "\\1 \\3"
+        ) |>
+          stringr::str_squish(),
+        taxon_clean
+      )
+    ) |>
+    dplyr::select(-has_short_token)
+}

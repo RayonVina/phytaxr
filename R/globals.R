@@ -64,5 +64,7 @@ utils::globalVariables(c(
   # fuzzy.R — stringdist result
   "dist",
   "resolution_method",
-  "worms_result"
+  "worms_result",
+  # clean.R — remove_short_interstitial_tokens
+  "has_short_token"
 ))

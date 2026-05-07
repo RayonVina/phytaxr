@@ -1,3 +1,45 @@
+# phytaxr 0.2.0
+
+## New features
+
+- New `remove_short_interstitial_tokens()` cleaning function (last step
+  of the pipeline): removes 1–2 character tokens that remain stranded
+  between genus and specific epithet after `sp`/`cf` removal (e.g.
+  `pseudo-nitzschia p seriata` → `pseudo-nitzschia seriata`). Affected
+  entries are automatically marked `uncertain = TRUE`.
+
+## Bug fixes
+
+- `process_fuzzy_batch()`: vocabularies (`genus_vocab`, `epithet_vocab`)
+  are now saved to checkpoint in all branches (`flag_for_removal`,
+  `accept`, `expert_review`). Previously only `expert_review` saved
+  them, losing vocabularies on session resume if the environment had
+  been cleared.
+- `process_fuzzy_batch()`: added WoRMS fuzzy raw results as numbered
+  fallback options in the interactive prompt when the cascade produces
+  no suggestions, mirroring the original `master_taxonomy.R` behaviour.
+- Fuzzy cascade levels L1b and L1d no longer require `n_words >= 2`,
+  enabling genus-only edit-distance correction and WoRMS fuzzy genus
+  lookup for single-token taxa (e.g. `niztschia`).
+- Fuzzy cascade level L1d: fixed candidate construction to avoid
+  trailing whitespace when `n_words == 1`.
+- New fuzzy cascade level L4b: detects single/double-letter abbreviated
+  epithets (e.g. `dinophysis d rotundata`, `fragilariopsis f. oceanica`)
+  and searches genus + suffix directly instead of treating the
+  abbreviation as the epithet.
+- Fixed `epithet_jw` ranking to use the suffix as reference epithet
+  when `words[2]` is an abbreviation, preventing correct matches from
+  being buried in the longshot list.
+- `ensure_resolution_schema()`: added `aphiaid` and `marginalia`
+  columns; function is now exported.
+- Closure scoping fix in `fuzzy.R`: `epithet_ref` is now captured
+  explicitly in the `map_dbl()` closure to avoid silent `NA` in
+  byte-compiled packages.
+
+## Documentation
+
+- `globals.R`: added `has_short_token` to `globalVariables()`.
+
 # phytaxr 0.1.0
 
 ## New features
