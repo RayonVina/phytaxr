@@ -2,7 +2,7 @@
 
 <!-- badges: start -->
 ![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)
-![Version: 0.1.0](https://img.shields.io/badge/version-0.1.0-blue.svg)
+![Version: 0.2.0](https://img.shields.io/badge/version-0.2.0-blue.svg)
 <!-- badges: end -->
 
 **PhyTaxR** provides tools for cleaning, standardising, and resolving
@@ -58,26 +58,27 @@ df <- tibble(taxon = c(
 
 # ── Stage 1: Cleaning ──────────────────────────────────────────────
 df_clean <- df |>
-  normalize_characters()           |>
-  process_taxonomic_prefixes()     |>
-  process_incertae_entries()       |>
-  process_sp_entries()             |>
-  process_bracket_entries()        |>
-  move_size_to_epithet()           |>
-  process_epithet_entries()        |>
-  normalize_infraspecific_ranks()  |>
-  remove_dots()                    |>
-  move_reproductive_structures()   |>
-  move_uncertainty_descriptors()   |>
-  move_morphological_descriptors() |>
-  move_with_descriptors()          |>
-  move_formia_to_epithet()         |>
-  move_commas_to_epithet()         |>
-  move_authors_to_epithet()        |>
-  remove_sp_tokens()               |>
-  split_separator_entries()        |>
-  process_generic_taxa()           |>
-  clean_trailing_hyphens()
+  normalize_characters()                  |>
+  process_taxonomic_prefixes()            |>
+  process_incertae_entries()              |>
+  process_sp_entries()                    |>
+  process_bracket_entries()               |>
+  move_size_to_epithet()                  |>
+  process_epithet_entries()               |>
+  normalize_infraspecific_ranks()         |>
+  remove_dots()                           |>
+  move_reproductive_structures()          |>
+  move_uncertainty_descriptors()          |>
+  move_morphological_descriptors()        |>
+  move_with_descriptors()                 |>
+  move_formia_to_epithet()                |>
+  move_commas_to_epithet()                |>
+  move_authors_to_epithet()               |>
+  remove_sp_tokens()                      |>
+  split_separator_entries()               |>
+  process_generic_taxa()                  |>
+  clean_trailing_hyphens()               |>
+  remove_short_interstitial_tokens()
 
 # ── Stage 2: Resolution ────────────────────────────────────────────
 # Run all steps in one call (recommended)
@@ -137,6 +138,7 @@ it modified. They must be called in order.
 | 12 | `split_separator_entries()` | Unfold `/`, `&`, `+`, `or` entries |
 | 13 | `process_generic_taxa()` | Vernacular → scientific name |
 | 14 | `clean_trailing_hyphens()` | Trailing/isolated hyphens |
+| 15 | `remove_short_interstitial_tokens()` | 1–2 char genus abbreviation artefacts (e.g. `p`, `p-n`) |
 
 ---
 
@@ -221,7 +223,7 @@ vernacular_remove("green alga")
 If you use **PhyTaxR** in published work, please cite it as:
 
 > Rayón Viña, F. (2026). *PhyTaxR: Phytoplankton Taxonomic Curation Tools*.
-> R package version 0.1.0.
+> R package version 0.2.0.
 > <https://github.com/RayonVina/phytaxr>
 
 ---
