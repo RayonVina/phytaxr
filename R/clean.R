@@ -350,14 +350,17 @@ normalize_infraspecific_ranks <- function(df) {
     dplyr::mutate(
       taxon_clean = stringr::str_replace_all(
         taxon_clean,
-        stringr::regex("\\b(var|f|subsp|ssp|cv)(?=\\.)", ignore_case = FALSE),
+        stringr::regex(
+          "\\b(subvar|subsp|subf|nothosubsp|nothovar|nsubsp|nvar|ssp|var|fo|f|cv|morph)(?=\\.)",
+          ignore_case = FALSE
+        ),
         " \\1"
       ) |>
         stringr::str_squish(),
       taxon_clean = stringr::str_replace_all(
         taxon_clean,
         stringr::regex(
-          "\\b(var|f|subsp|ssp|cv)(?!\\.)\\s+",
+          "\\b(subvar|subsp|subf|nothosubsp|nothovar|nsubsp|nvar|ssp|var|fo|f|cv|morph)(?!\\.)\\s+",
           ignore_case = FALSE
         ),
         "\\1. "
@@ -365,7 +368,7 @@ normalize_infraspecific_ranks <- function(df) {
       taxon_clean = stringr::str_replace_all(
         taxon_clean,
         stringr::regex(
-          "\\b(var|f|subsp|ssp|cv)\\.(?!\\s)",
+          "\\b(subvar|subsp|subf|nothosubsp|nothovar|nsubsp|nvar|ssp|var|fo|f|cv|morph)\\.(?!\\s)",
           ignore_case = FALSE
         ),
         "\\1. "
@@ -389,7 +392,10 @@ remove_dots <- function(df) {
     dplyr::mutate(
       taxon_clean = stringr::str_replace_all(
         taxon_clean,
-        stringr::regex("\\b(var|f|subsp|ssp|cv)\\.", ignore_case = FALSE),
+        stringr::regex(
+          "\\b(subvar|subsp|subf|nothosubsp|nothovar|nsubsp|nvar|ssp|var|fo|f|cv|morph)\\.",
+          ignore_case = FALSE
+        ),
         "\\1\u00A7\u00A7\u00A7"
       ),
       taxon_clean = stringr::str_replace_all(taxon_clean, "\\.", ""),
@@ -1023,44 +1029,115 @@ clean_trailing_hyphens <- function(df) {
     )
 }
 
-#' Remove short ambiguous genus abbreviation tokens
+#' Remove short interstitial tokens and infraspecific rank markers
 #'
-#' After the cleaning pipeline, tokens of 1-2 characters (e.g. `p`, `p-n`,
-#' `cf`) that remain stranded between the genus and the specific epithet are
-#' artefacts of patterns like "Genus sp cf G epithet" where `G` is an informal
-#' abbreviation of the genus name. This function removes those tokens from
-#' `taxon_clean` and sets `uncertain = TRUE` when it was not already set.
+#' After the cleaning pipeline, tokens that appear between the genus and the
+#' specific epithet and that carry no independent taxonomic value are removed
+#' from `taxon_clean`. Two categories are handled:
 #'
-#' This function should be called as the **last step** of the cleaning pipeline,
+#' 1. **Short genus-initial abbreviations** (1-2 lowercase letters, optionally
+#'    hyphenated, e.g. `ch`, `g`, `p-n`): informal genus abbreviations inserted
+#'    by observers (e.g. "Chaetoceros ch affinis").
+#'
+#' 2. **Infraspecific rank markers** (with or without trailing dot): standard
+#'    botanical/algological rank abbreviations that appear between the species
+#'    epithet and the infraspecific epithet (e.g. "Thalassiosira var. expecta",
+#'    "Nitzschia subsp. gracilis"). The full list covers all ranks recognised by
+#'    the ICN (Madrid Code) and ICZN, including their common dotless variants:
+#'    `subvar`/`subvar.`, `subsp`/`subsp.`, `subf`/`subf.`,
+#'    `nothosubsp`/`nothosubsp.`, `nothovar`/`nothovar.`,
+#'    `nsubsp`/`nsubsp.`, `nvar`/`nvar.`, `ssp`/`ssp.`, `var`/`var.`,
+#'    `fo`/`fo.`, `f`/`f.`, `cv`/`cv.`, `morph`/`morph.`.
+#'
+#' In both cases the token is removed from `taxon_clean` and `uncertain` is
+#' set to `TRUE`. For rank markers the token is additionally preserved in
+#' `tax_epithet` (as taxonomic metadata), whereas genus-initial abbreviations
+#' are silently discarded.
+#'
+#' This function must be called as the **last step** of the cleaning pipeline,
 #' after [clean_trailing_hyphens()].
 #'
 #' @param df A data frame processed by [clean_trailing_hyphens()].
-#' @return The input data frame with updated `taxon_clean` and `uncertain`.
-#' @importFrom dplyr mutate if_else
-#' @importFrom stringr str_detect str_replace str_squish regex
+#' @return The input data frame with updated `taxon_clean`, `tax_epithet`,
+#'   and `uncertain`.
+#' @importFrom dplyr mutate if_else case_when
+#' @importFrom stringr str_detect str_replace str_match str_squish regex
 #' @export
 remove_short_interstitial_tokens <- function(df) {
-  # Matches: GENUS<space>TOKEN<space>EPITHET
-  # where TOKEN is 1-2 lowercase letters or a 1-2 letter hyphenated pair (p-n)
-  # and EPITHET is at least 3 characters (to avoid matching real binomials
-  # like "Genus sp" after sp removal or initials like "T. weissflogii").
-  short_token_pattern <- stringr::regex(
+  # --- Rank markers (longest alternatives first to avoid partial match) ------
+  rank_alts <- paste(
+    "subvar\\.?",
+    "subsp\\.?",
+    "subf\\.?",
+    "nothosubsp\\.?",
+    "nothovar\\.?",
+    "nsubsp\\.?",
+    "nvar\\.?",
+    "ssp\\.?",
+    "var\\.?",
+    "fo\\.?",
+    "f\\.?",
+    "cv\\.?",
+    "morph\\.?",
+    sep = "|"
+  )
+
+  # Pattern A: rank marker in interstitial position
+  #   Group 1 = genus+species  |  Group 2 = rank token  |  Group 3 = infrasp. epithet
+  rank_pattern <- stringr::regex(
+    paste0(
+      "^([A-Za-z][a-z-]+(?:\\s+[a-z][a-z-]+)?)\\s+(",
+      rank_alts,
+      ")\\s+([a-z]{3,}.*)$"
+    )
+  )
+
+  # Pattern B: short genus-initial abbreviation (1-2 lowercase letters,
+  #            optionally hyphenated), no dot allowed
+  #   Group 1 = genus  |  Group 2 = short token (discarded)  |  Group 3 = epithet
+  short_pattern <- stringr::regex(
     "^([A-Za-z][a-z-]+)\\s+([a-z]{1,2}(?:-[a-z]{1,2})?)\\s+([a-z]{3,}.*)$"
   )
+
   df |>
     dplyr::mutate(
-      has_short_token = stringr::str_detect(taxon_clean, short_token_pattern),
-      uncertain = dplyr::if_else(has_short_token, TRUE, uncertain),
-      taxon_clean = dplyr::if_else(
-        has_short_token,
-        stringr::str_replace(
-          taxon_clean,
-          short_token_pattern,
-          "\\1 \\3"
-        ) |>
+      # --- Detect which pattern fires ----------------------------------------
+      has_rank_token = stringr::str_detect(taxon_clean, rank_pattern),
+      has_short_token = !has_rank_token &
+        stringr::str_detect(taxon_clean, short_pattern),
+
+      # --- Extract the rank token (only when pattern A fires) ----------------
+      rank_token = dplyr::if_else(
+        has_rank_token,
+        stringr::str_match(taxon_clean, rank_pattern)[, 3], # group 2
+        NA_character_
+      ),
+
+      # --- Preserve rank token in tax_epithet --------------------------------
+      tax_epithet = dplyr::case_when(
+        has_rank_token & !is.na(rank_token) & !is.na(tax_epithet) ~
+          stringr::str_squish(paste(tax_epithet, rank_token)),
+        has_rank_token & !is.na(rank_token) ~ rank_token,
+        TRUE ~ tax_epithet
+      ),
+
+      # --- Rewrite taxon_clean -----------------------------------------------
+      taxon_clean = dplyr::case_when(
+        has_rank_token ~
+          stringr::str_replace(taxon_clean, rank_pattern, "\\1 \\3") |>
           stringr::str_squish(),
-        taxon_clean
+        has_short_token ~
+          stringr::str_replace(taxon_clean, short_pattern, "\\1 \\3") |>
+          stringr::str_squish(),
+        TRUE ~ taxon_clean
+      ),
+
+      # --- Flag uncertainty --------------------------------------------------
+      uncertain = dplyr::if_else(
+        has_rank_token | has_short_token,
+        TRUE,
+        uncertain
       )
     ) |>
-    dplyr::select(-has_short_token)
+    dplyr::select(-has_rank_token, -has_short_token, -rank_token)
 }
