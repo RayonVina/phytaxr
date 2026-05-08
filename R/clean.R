@@ -1,3 +1,11 @@
+# Suppress R CMD check NOTEs for dplyr column references created
+# as intermediate variables inside mutate() pipelines.
+utils::globalVariables(c(
+  "has_rank_token",
+  "has_short_token",
+  "rank_token"
+))
+
 #' Normalize special characters in taxon names
 #'
 #' Converts taxon names to UTF-8, replaces typographic variants (curly quotes,
@@ -1101,27 +1109,24 @@ remove_short_interstitial_tokens <- function(df) {
 
   df |>
     dplyr::mutate(
-      # --- Detect which pattern fires ----------------------------------------
+      # Bloque 1: detección y extracción
       has_rank_token = stringr::str_detect(taxon_clean, rank_pattern),
       has_short_token = !has_rank_token &
         stringr::str_detect(taxon_clean, short_pattern),
-
-      # --- Extract the rank token (only when pattern A fires) ----------------
       rank_token = dplyr::if_else(
         has_rank_token,
-        stringr::str_match(taxon_clean, rank_pattern)[, 3], # group 2
+        stringr::str_match(taxon_clean, rank_pattern)[, 3],
         NA_character_
-      ),
-
-      # --- Preserve rank token in tax_epithet --------------------------------
+      )
+    ) |>
+    dplyr::mutate(
+      # Bloque 2: uso de las variables anteriores
       tax_epithet = dplyr::case_when(
         has_rank_token & !is.na(rank_token) & !is.na(tax_epithet) ~
           stringr::str_squish(paste(tax_epithet, rank_token)),
         has_rank_token & !is.na(rank_token) ~ rank_token,
         TRUE ~ tax_epithet
       ),
-
-      # --- Rewrite taxon_clean -----------------------------------------------
       taxon_clean = dplyr::case_when(
         has_rank_token ~
           stringr::str_replace(taxon_clean, rank_pattern, "\\1 \\3") |>
@@ -1131,8 +1136,6 @@ remove_short_interstitial_tokens <- function(df) {
           stringr::str_squish(),
         TRUE ~ taxon_clean
       ),
-
-      # --- Flag uncertainty --------------------------------------------------
       uncertain = dplyr::if_else(
         has_rank_token | has_short_token,
         TRUE,
