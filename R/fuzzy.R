@@ -231,6 +231,30 @@ normalize_taxonomic_name <- function(text, genus_vocab) {
   text
 }
 
+# ----------------------------------------
+
+#' Detect if a token is an abbreviated initial of the genus name
+#'
+#' Returns TRUE when `token` (after stripping dots) is 1-3 characters long
+#' AND the genus name starts with those characters. This identifies tokens
+#' such as "ch" in "chaetoceros ch affinis" or "g" in "gymnodinium g arcticum"
+#' that are redundant genus abbreviations inserted by observers and should be
+#' skipped when building the search query.
+#'
+#' @param genus  Character. The genus name (first word of the taxon).
+#' @param token  Character. The token to test (second word of the taxon).
+#'
+#' @return Logical scalar.
+#'
+#' @keywords internal
+is_genus_initial <- function(genus, token) {
+  token_clean <- tolower(gsub("\\.", "", trimws(token)))
+  nchar(token_clean) >= 1 &&
+    nchar(token_clean) <= 3 &&
+    startsWith(tolower(genus), token_clean)
+}
+
+
 # ============================================================================
 # EDIT-DISTANCE GENUS CORRECTION
 # ============================================================================
@@ -778,11 +802,11 @@ search_worms_fuzzy_suggestions <- function(
 
         if (
           !has_good(all_records) &&
-            nchar(trimws(gsub("\\.", "", words[2]))) <= 2
+            is_genus_initial(genus, words[2])
         ) {
           binomial_direct <- paste(genus, suffix)
           cat(sprintf(
-            " -> L4b: abbreviated initial '%s', trying direct binomial '%s'...\n",
+            " -> L4b: genus initial '%s' detected, trying direct binomial '%s'...\n",
             words[2],
             binomial_direct
           ))
@@ -865,7 +889,7 @@ search_worms_fuzzy_suggestions <- function(
   epithet_ref <- if (
     n_words >= 3 &&
       !is.na(suffix) &&
-      nchar(trimws(gsub("\\.", "", words[2]))) <= 2
+      is_genus_initial(genus, words[2])
   ) {
     suffix
   } else {
