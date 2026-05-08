@@ -1586,10 +1586,11 @@ save_progress <- function(
 #' Run the interactive semi-automatic fuzzy resolution loop
 #'
 #' Iterates over all unresolved entries in `df` (where `matched_aphiaid` is
-#' `NA` and `resolution_method` is not `"expert_review"`), presents cascading
-#' WoRMS suggestions via [search_worms_fuzzy_suggestions()], collects user
-#' choices via [prompt_fuzzy_suggestions()], and writes accepted resolutions
-#' back to `df`. Progress is saved to `.GlobalEnv` after each accepted entry.
+#' `NA`, `resolution_method` is not `"expert_review"`, and
+#' `flag_for_removal` is not `TRUE`), presents cascading WoRMS suggestions
+#' via [search_worms_fuzzy_suggestions()], collects user choices via
+#' [prompt_fuzzy_suggestions()], and writes accepted resolutions back to
+#' `df`. Progress is saved to `.GlobalEnv` after each accepted entry.
 #'
 #' @param df A data frame with the resolution schema (as produced by the
 #'   cleaning + automatic resolution pipeline).
@@ -1649,7 +1650,8 @@ process_fuzzy_batch <- function(
 
   unresolved_idx <- which(
     is.na(df$matched_aphiaid) &
-      (is.na(df$resolution_method) | df$resolution_method != "expert_review")
+      (is.na(df$resolution_method) | df$resolution_method != "expert_review") &
+      (is.na(df$flag_for_removal) | df$flag_for_removal != TRUE)
   )
   total_unresolved <- length(unresolved_idx)
 
