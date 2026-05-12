@@ -1,8 +1,9 @@
-# PhyTaxR
+# PhyTaxR <img src="man/figures/logo.png" align="right" height="139" alt="PhyTaxR logo" />
 
 <!-- badges: start -->
+[![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 ![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)
-![Version: 0.2.0](https://img.shields.io/badge/version-0.2.0-blue.svg)
+![Version: 0.2.5](https://img.shields.io/badge/version-0.2.5-blue.svg)
 <!-- badges: end -->
 
 **PhyTaxR** provides tools for cleaning, standardising, and resolving
@@ -117,7 +118,7 @@ Each function takes a data frame with a `taxon_clean` column and returns
 it modified. They must be called in order.
 
 | Step | Function | What it does |
-|------|----------|--------------|
+|------|----------|--------------| 
 | 1 | `normalize_characters()` | Encoding, diacritics, invisible spaces |
 | 2 | `process_taxonomic_prefixes()` | O./C./F./P. rank prefixes |
 | 3 | `process_incertae_entries()` | cf., aff., *incertae sedis*, s.l., etc. |
@@ -223,7 +224,7 @@ vernacular_remove("green alga")
 If you use **PhyTaxR** in published work, please cite it as:
 
 > Rayón Viña, F. (2026). *PhyTaxR: Phytoplankton Taxonomic Curation Tools*.
-> R package version 0.2.0.
+> R package version 0.2.5.
 > <https://github.com/RayonVina/phytaxr>
 
 ---

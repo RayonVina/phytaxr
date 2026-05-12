@@ -1,3 +1,43 @@
+# phytaxr 0.2.5
+
+## New features
+
+- `remove_short_interstitial_tokens()`: extended to handle infraspecific
+  rank markers in interstitial position (Pattern A). Rank tokens such as
+  `var.`, `subsp.`, `f.`, `subf.`, `cv.`, `morph.` and all full ICN/ICZN
+  variants are now detected, removed from `taxon_clean`, and preserved in
+  `tax_epithet`. The existing short genus-initial abbreviation logic
+  (Pattern B) is unchanged but now only fires when Pattern A does not
+  match, avoiding double-processing.
+  Fixes: `thalassiosira var. expecta` → `thalassiosira expecta`,
+  `nitzschia subsp. gracilis` → `nitzschia gracilis`,
+  `navicula f. angularis` → `navicula angularis`.
+- Fuzzy cascade level L4b: replaced the `nchar(token) <= 2` length check
+  with a new `is_genus_initial()` helper that requires the token to be a
+  prefix of the genus name. This eliminates false positives from 3-character
+  tokens such as `var.` and improves detection reliability (77/77 cases
+  confirmed in the dataset).
+
+## Bug fixes
+
+- `process_fuzzy_batch()`: entries with `flag_for_removal = TRUE` were
+  incorrectly included in `unresolved_idx` because the filter only excluded
+  rows with a resolved `matched_aphiaid`. Fixed by adding
+  `(is.na(flag_for_removal) | flag_for_removal != TRUE)` to the filter,
+  preventing flagged entries from reappearing on every checkpoint resume.
+- `globals.R`: added `has_rank_token` and `rank_token` to
+  `globalVariables()` to suppress R CMD check NOTEs introduced by the new
+  Pattern A in `remove_short_interstitial_tokens()`. The `.data$` pronoun
+  was insufficient in R 4.6.0. Also removed the `rlang` import added in a
+  previous attempt.
+
+## Infrastructure
+
+- `NEWS.md`: renamed from `changelog.md` to comply with the CRAN standard
+  for top-level changelog files.
+
+---
+
 # phytaxr 0.2.0
 
 ## New features
