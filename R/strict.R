@@ -866,9 +866,10 @@ run_resolution_pipeline <- function(
   cat(sprintf("  Unresolved: %d\n", sum(is.na(df$matched_aphiaid))))
   if ("resolution_method" %in% names(df)) {
     tbl <- table(df$resolution_method, useNA = "ifany")
-    for (nm in names(tbl)) {
+    for (i in seq_along(tbl)) {
+      nm <- names(tbl)[i]
       label <- if (is.na(nm)) "unresolved" else nm
-      cat(sprintf("    %-30s %d\n", label, tbl[[nm]]))
+      cat(sprintf("    %-30s %d\n", label, tbl[i]))
     }
   }
   df

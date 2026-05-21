@@ -62,8 +62,9 @@ The updated data frame.
 }
 \description{
 Iterates over all unresolved entries in \code{df} (where \code{matched_aphiaid} is
-\code{NA} and \code{resolution_method} is not \code{"expert_review"}), presents cascading
-WoRMS suggestions via \code{\link[=search_worms_fuzzy_suggestions]{search_worms_fuzzy_suggestions()}}, collects user
-choices via \code{\link[=prompt_fuzzy_suggestions]{prompt_fuzzy_suggestions()}}, and writes accepted resolutions
-back to \code{df}. Progress is saved to \code{.GlobalEnv} after each accepted entry.
+\code{NA}, \code{resolution_method} is not \code{"expert_review"}, and
+\code{flag_for_removal} is not \code{TRUE}), presents cascading WoRMS suggestions
+via \code{\link[=search_worms_fuzzy_suggestions]{search_worms_fuzzy_suggestions()}}, collects user choices via
+\code{\link[=prompt_fuzzy_suggestions]{prompt_fuzzy_suggestions()}}, and writes accepted resolutions back to
+\code{df}. Progress is saved to \code{.GlobalEnv} after each accepted entry.
 }

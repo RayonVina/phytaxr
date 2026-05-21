@@ -3,7 +3,7 @@
 <!-- badges: start -->
 [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 ![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)
-![Version: 0.2.5](https://img.shields.io/badge/version-0.2.5-blue.svg)
+![Version: 0.2.6](https://img.shields.io/badge/version-0.2.6-blue.svg)
 <!-- badges: end -->
 
 **PhyTaxR** provides tools for cleaning, standardising, and resolving
@@ -25,18 +25,22 @@ remotes::install_github("RayonVina/phytaxr")
 
 ## Overview
 
-The package implements a two-stage pipeline:
+The package implements a three-stage pipeline:
 
 1. **Cleaning** — a sequence of lightweight, composable functions that
    normalise a raw taxon string into a clean scientific name plus a
    structured `tax_epithet` column holding qualifiers (size info,
    morphotypes, authorship, uncertainty flags, etc.).
 
-2. **Resolution** — step-by-step functions that query WoRMS and GBIF to
+2. **Automatic resolution** — step-by-step functions that query WoRMS and GBIF to
    return AphiaIDs, accepted names, synonymy notes, and full taxonomic
    classification from kingdom to forma.
 
-Both stages operate on plain data frames and are designed to be chained
+3. **Semi-automatic fuzzy resolution** — an interactive batch review tool
+   (`process_fuzzy_batch()`) for names that could not be resolved
+   automatically, using fuzzy matching with human-in-the-loop validation.
+
+All stages operate on plain data frames and are designed to be chained
 with the `|>` pipe. Resolution functions also accept a bare character
 vector directly, and support a custom column name via the `col` argument.
 
@@ -81,7 +85,7 @@ df_clean <- df |>
   clean_trailing_hyphens()              |> # trailing/isolated hyphens
   remove_short_interstitial_tokens()        # 1–2 char genus abbreviation artefacts
 
-# ── Stage 2: Resolution ────────────────────────────────────────────
+# ── Stage 2: Automatic resolution ─────────────────────────────────
 # Run all steps in one call (recommended)
 df_res <- run_resolution_pipeline(df_clean)
 
@@ -93,8 +97,30 @@ df_res <- resolve_taxonomic_status(df_res)     # 4. Resolve synonyms
 df_res <- search_worms_fuzzy_minor(df_res)     # 5. Fuzzy minor corrections
 df_res <- get_taxonomy(df_res)                 # 6. Full classification
 
+# ── Stage 3: Semi-automatic fuzzy resolution ───────────────────────
+# For names still unresolved after Stage 2, use the interactive batch tool.
+# Build vocabularies from already-resolved names (used as candidate pool):
+genus_vocab   <- build_genus_vocabulary(df_res)
+epithet_vocab <- build_epithet_vocabulary(df_res)
+
+# Launch interactive review — presents fuzzy candidates for each unresolved
+# name and prompts the user to accept, skip, or manually assign a match.
+# Progress is saved automatically to a checkpoint file so the session can
+# be interrupted and resumed without losing work.
+df_final <- process_fuzzy_batch(
+  df          = df_res,
+  genus_vocab = genus_vocab,
+  epithet_vocab = epithet_vocab,
+  batch_size          = 10,
+  checkpoint_file     = "phytaxr_step5_checkpoint.rds",
+  min_similarity      = 0.85,
+  max_suggestions     = 15,
+  edit_max_dist       = 3,
+  timeout_sec         = 15
+)
+
 # Inspect
-dplyr::glimpse(df_res)
+dplyr::glimpse(df_final)
 ```
 
 Resolution functions also work directly on a character vector:
@@ -143,7 +169,7 @@ it modified. They must be called in order.
 
 ---
 
-## Resolution pipeline
+## Automatic resolution pipeline
 
 | Step | Function | Method |
 |------|----------|--------|
@@ -161,6 +187,56 @@ via `run_resolution_pipeline()`.
 
 ---
 
+## Semi-automatic fuzzy resolution
+
+`process_fuzzy_batch()` handles names that remain unresolved after the
+automatic pipeline — typically rare taxa, misspellings too severe for
+automated correction, or names absent from WoRMS/GBIF.
+
+**How it works:**
+
+1. For each unresolved name, candidate matches are generated using
+   Levenshtein distance on genus and epithet vocabularies built from
+   already-resolved names in the same dataset.
+2. Candidates are ranked by similarity score and presented to the user
+   in the console, one batch at a time.
+3. The user accepts a candidate, skips the entry, or provides a manual
+   AphiaID. Accepted matches are written back into the data frame with
+   `resolution_method = "fuzzy_manual"`.
+4. Progress is checkpointed automatically after each batch. If the
+   session is interrupted, the next run resumes from where it stopped —
+   no work is lost.
+
+**Key parameters:**
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `batch_size` | 10 | Names reviewed per interactive round |
+| `checkpoint_file` | `"phytaxr_step5_checkpoint.rds"` | Path for auto-save |
+| `min_similarity` | 0.85 | Minimum similarity score to show a candidate |
+| `max_suggestions` | 15 | Maximum candidates shown per name |
+| `longshot_threshold` | 0.30 | Lower threshold for speculative suggestions |
+| `edit_max_dist` | 3 | Maximum Levenshtein distance for candidates |
+| `timeout_sec` | 15 | Seconds before skipping a name automatically |
+
+**Resuming an interrupted session:**
+
+```r
+# On a subsequent run, the checkpoint is detected and loaded automatically.
+# The vocabularies should be rebuilt from the current state of the data frame.
+genus_vocab   <- build_genus_vocabulary(df_res)
+epithet_vocab <- build_epithet_vocabulary(df_res)
+
+df_final <- process_fuzzy_batch(
+  df            = df_res,
+  genus_vocab   = genus_vocab,
+  epithet_vocab = epithet_vocab,
+  checkpoint_file = "phytaxr_step5_checkpoint.rds"
+)
+```
+
+---
+
 ## Output columns
 
 | Column | Description |
@@ -174,7 +250,7 @@ via `run_resolution_pipeline()`.
 | `accepted_name` | Currently accepted name |
 | `accepted_aphiaid` | AphiaID of the accepted name |
 | `taxonomic_status` | `"accepted"`, `"synonym"`, etc. |
-| `resolution_method` | Which step resolved the name |
+| `resolution_method` | Which step resolved the name (`"worms_exact"`, `"worms_taxamatch"`, `"fuzzy_manual"`, etc.) |
 | `resolution_notes` | Synonymy notes and nomenclatural changes |
 | `kingdom` … `forma` | Full taxonomic hierarchy |
 
@@ -224,7 +300,7 @@ vernacular_remove("green alga")
 If you use **PhyTaxR** in published work, please cite it as:
 
 > Rayón Viña, F. (2026). *PhyTaxR: Phytoplankton Taxonomic Curation Tools*.
-> R package version 0.2.5.
+> R package version 0.2.6.
 > <https://github.com/RayonVina/phytaxr>
 
 ---

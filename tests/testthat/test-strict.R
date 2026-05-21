@@ -64,6 +64,7 @@ test_that("run_resolution_pipeline errors on missing col", {
 # custom col accepted without col-related error --------------------------
 
 test_that("run_resolution_pipeline accepts custom col without col error", {
+  skip_if_offline() # ← evita timeout en check() sin red
   df <- make_df(col = "clean_name")
   result <- tryCatch(
     run_resolution_pipeline(df, col = "clean_name"),

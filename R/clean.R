@@ -135,8 +135,7 @@ process_taxonomic_prefixes <- function(df) {
 #' @return The input data frame with updated `taxon_clean`, `tax_epithet`,
 #'   and `uncertain`.
 #' @importFrom dplyr mutate select case_when
-#' @importFrom stringr str_detect str_extract str_extract_all str_remove
-#'   str_remove_all str_replace_all str_squish regex
+#' @importFrom stringr str_detect str_extract str_extract_all str_remove str_remove_all str_replace_all str_squish regex
 #' @importFrom purrr map_chr
 #' @export
 process_incertae_entries <- function(df) {
@@ -711,8 +710,7 @@ remove_sp_tokens <- function(df) {
 #' @return A data frame with potentially more rows than the input, with
 #'   updated `taxon_clean`, `tax_epithet`, and `uncertain`.
 #' @importFrom dplyr mutate select group_by ungroup distinct case_when if_else n
-#' @importFrom stringr str_detect str_replace_all str_trim str_extract
-#'   str_squish str_count str_c word
+#' @importFrom stringr str_detect str_replace_all str_trim str_extract str_squish str_count str_c word
 #' @importFrom tidyr uncount
 #' @export
 split_separator_entries <- function(df) {
@@ -873,8 +871,7 @@ split_separator_entries <- function(df) {
 #' @return The input data frame with updated `taxon_clean`, `tax_epithet`,
 #'   and `uncertain`.
 #' @importFrom dplyr mutate select case_when if_else
-#' @importFrom stringr str_detect str_extract str_remove_all str_squish
-#'   str_to_lower regex
+#' @importFrom stringr str_detect str_extract str_remove_all str_squish str_to_lower regex
 #' @export
 process_generic_taxa <- function(df) {
   common_names_map <- c(
