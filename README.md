@@ -112,7 +112,7 @@ df_final <- process_fuzzy_batch(
   genus_vocab = genus_vocab,
   epithet_vocab = epithet_vocab,
   batch_size          = 10,
-  checkpoint_file     = "phytaxr_step5_checkpoint.rds",
+  checkpoint_file     = "phytaxr_step3_checkpoint.rds",
   min_similarity      = 0.85,
   max_suggestions     = 15,
   edit_max_dist       = 3,
@@ -212,7 +212,7 @@ automated correction, or names absent from WoRMS/GBIF.
 | Parameter | Default | Description |
 |-----------|---------|-------------|
 | `batch_size` | 10 | Names reviewed per interactive round |
-| `checkpoint_file` | `"phytaxr_step5_checkpoint.rds"` | Path for auto-save |
+| `checkpoint_file` | `"phytaxr_step3_checkpoint.rds"` | Path for auto-save |
 | `min_similarity` | 0.85 | Minimum similarity score to show a candidate |
 | `max_suggestions` | 15 | Maximum candidates shown per name |
 | `longshot_threshold` | 0.30 | Lower threshold for speculative suggestions |
@@ -231,7 +231,7 @@ df_final <- process_fuzzy_batch(
   df            = df_res,
   genus_vocab   = genus_vocab,
   epithet_vocab = epithet_vocab,
-  checkpoint_file = "phytaxr_step5_checkpoint.rds"
+  checkpoint_file = "phytaxr_step3_checkpoint.rds"
 )
 ```
 
