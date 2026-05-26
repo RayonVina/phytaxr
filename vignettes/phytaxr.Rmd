@@ -95,34 +95,33 @@ df <- df |>
   move_authors_to_epithet()        |>  # 10g. authorships
   remove_sp_tokens()               |>  # 11. sp/spp/ssp tokens in epithet
   split_separator_entries()        |>  # 12. unfold /, &, + entries
-  process_generic_taxa()           |>  # 13. vernacular → taxon name
-  clean_trailing_hyphens()             # 14. stray hyphens
+    process_generic_taxa()           |>  # 13. vernacular → taxon name (exact match)
+  clean_trailing_hyphens()         |>  # 14. stray hyphens
+  remove_short_interstitial_tokens() |> # 15. 1–2 char genus abbreviation artefacts
+  apply_vernacular_corrections()        # 16. prefix-based name correction from dictionary
 ```
 
 ## 4. Resolve against WoRMS and GBIF
 
-`resolve_taxonomy()` is the main entry point for the external resolution
-stage. It runs the full sequential pipeline on a data frame that already
-has a `taxon_clean` column (as produced by the cleaning step above, or
-directly on raw names):
+`run_resolution_pipeline()` runs the full sequential resolution pipeline on a
+data frame that already has a `taxon_clean` column:
 
 ```{r resolve}
-result <- resolve_taxonomy(raw_taxa)
+df_res <- run_resolution_pipeline(df)
 ```
 
-The output is a tibble with one row per input name (slash entries are
-expanded) and columns for matched and accepted names, AphiaIDs, taxonomic
+The output adds columns for matched and accepted names, AphiaIDs, taxonomic
 status, resolution method, and the full classification from kingdom to forma.
 
 ```{r inspect}
 # Resolution summary
-result |>
-  count(resolution_method, sort = TRUE)
+df_res |>
+  dplyr::count(resolution_method, sort = TRUE)
 
 # Unresolved entries
-result |>
-  filter(is.na(matched_aphiaid)) |>
-  select(taxon_original, taxon_clean)
+df_res |>
+  dplyr::filter(is.na(matched_aphiaid)) |>
+  dplyr::select(taxon_clean)
 ```
 
 ## 5. Interactive fuzzy review
@@ -169,6 +168,12 @@ names (e.g. `"diatom"` → `"Bacillariophyceae"`). The dictionary is stored in
 `R/sysdata.rda` and loaded automatically. Session-level changes are kept in
 memory and lost on restart; to make them permanent, edit
 `data-raw/vernacular.R` and re-run it.
+`process_generic_taxa()` (step 13) performs an exact-match lookup of the full
+`taxon_clean` string against the dictionary. `apply_vernacular_corrections()`
+(step 16) complements it with a prefix-based search: if a dictionary key is
+found at the *start* of `taxon_clean`, it replaces it with the canonical form
+while preserving any trailing epithet (e.g. `"pseudo nitzschia delicatissima"`
+→ `"Pseudo-nitzschia delicatissima"`).
 
 ```{r vernacular}
 # List all entries

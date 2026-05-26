@@ -90,7 +90,20 @@
   "gynmodiniaceae" = "Gymnodiniaceae",
   "gynodiniaceae" = "Gymnodiniaceae",
   "halopappinae" = "Halopappidae",
-  "warnowiaceae" = "Warnowiaceae"
+  "warnowiaceae" = "Warnowiaceae",
+  # Pseudo-nitzschia
+  "pseudo nitzschia" = "Pseudo-nitzschia",
+  "pseudonitzschia" = "Pseudo-nitzschia",
+  "pseudo nitzchia" = "Pseudo-nitzschia",
+  "pseudonitzchia" = "Pseudo-nitzschia",
+  "pseudo nitszchia" = "Pseudo-nitzschia",
+  "pseudonitszchia" = "Pseudo-nitzschia",
+  "pseudo nitschia" = "Pseudo-nitzschia",
+  "pseudonitschia" = "Pseudo-nitzschia",
+  "pseudo nitzscia" = "Pseudo-nitzschia",
+  "pseudonitzscia" = "Pseudo-nitzschia",
+  "pseudoniztschia" = "Pseudo-nitzschia",
+  "pseudo niztschia" = "Pseudo-nitzschia"
 )
 
 usethis::use_data(.VERNACULAR_TO_TAXON, internal = TRUE, overwrite = TRUE)

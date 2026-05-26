@@ -21,3 +21,4 @@ columns are \code{NA_character_} if the AphiaID is not found.
 Given an AphiaID, retrieves the full taxonomic classification from a
 pre-loaded named list keyed by AphiaID.
 }
+\keyword{internal}

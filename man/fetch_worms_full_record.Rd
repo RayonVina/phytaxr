@@ -20,3 +20,4 @@ vector of all rank columns), or \code{NULL} if the record cannot be fetched.
 Given an AphiaID, retrieves the matched record, resolves it to the accepted
 name if it is a synonym, and returns the full taxonomic classification.
 }
+\keyword{internal}

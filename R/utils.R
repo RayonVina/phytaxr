@@ -7,7 +7,8 @@
 #'
 #' @return A character string: `paste0(a, b)`.
 #'
-#' @export
+#' @keywords internal
+
 `%&%` <- function(a, b) paste0(a, b)
 
 # ----------------------------------------

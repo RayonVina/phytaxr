@@ -70,3 +70,4 @@ taxon name that could not be resolved automatically:
 
 Returns consolidated, ranked suggestions grouped by confidence tier.
 }
+\keyword{internal}

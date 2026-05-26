@@ -102,7 +102,7 @@ worms_robust_search <- function(
 #'
 #' @importFrom tibble tibble
 #'
-#' @export
+#' @keywords internal
 lookup_taxon_info <- function(search_term, lookup, include_notes = TRUE) {
   result <- lookup[[search_term]]
 
@@ -154,7 +154,7 @@ lookup_taxon_info <- function(search_term, lookup, include_notes = TRUE) {
 #'
 #' @importFrom tibble tibble
 #'
-#' @export
+#' @keywords internal
 lookup_taxonomy_info <- function(aphiaid_val, lookup) {
   .empty <- function() {
     tibble::tibble(
@@ -260,7 +260,7 @@ lookup_taxonomy_info <- function(aphiaid_val, lookup) {
 #'   columns added and initialised to \code{NA}.
 #'
 #' @importFrom stats setNames
-#' @export
+#' @keywords internal
 ensure_resolution_schema <- function(df) {
   resolution_cols <- list(
     matched_aphiaid = NA_integer_,

@@ -19,3 +19,4 @@ A named list with \code{action} (\code{"ok"} or \code{"retry"}) and \code{notes}
 Shows the matched and accepted names, then asks the user for optional
 free-text notes. Returns \code{"retry"} if the user wants to undo the selection.
 }
+\keyword{internal}

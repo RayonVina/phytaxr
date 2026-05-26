@@ -45,16 +45,17 @@ vernacular_lookup <- function(name) {
 #' @export
 vernacular_add <- function(common, taxon) {
   key <- tolower(trimws(common))
-  d   <- .vdict()
+  d <- .vdict()
   if (key %in% names(d)) {
     message(sprintf(
       "'%s' already exists -> '%s'. Use vernacular_update() to change it.",
-      key, d[[key]]
+      key,
+      d[[key]]
     ))
     return(invisible(d))
   }
-  d[[key]]        <- taxon
-  .vern_env$dict  <- d
+  d[[key]] <- taxon
+  .vern_env$dict <- d
   message(sprintf("Added: '%s' -> '%s'", key, taxon))
   invisible(.vdict())
 }
@@ -67,13 +68,13 @@ vernacular_add <- function(common, taxon) {
 #' @export
 vernacular_update <- function(common, taxon) {
   key <- tolower(trimws(common))
-  d   <- .vdict()
+  d <- .vdict()
   if (!key %in% names(d)) {
     message(sprintf("'%s' not found. Use vernacular_add() to create it.", key))
     return(invisible(d))
   }
-  old            <- d[[key]]
-  d[[key]]       <- taxon
+  old <- d[[key]]
+  d[[key]] <- taxon
   .vern_env$dict <- d
   message(sprintf("Updated: '%s': '%s' -> '%s'", key, old, taxon))
   invisible(.vdict())
@@ -86,7 +87,7 @@ vernacular_update <- function(common, taxon) {
 #' @export
 vernacular_remove <- function(common) {
   key <- tolower(trimws(common))
-  d   <- .vdict()
+  d <- .vdict()
   if (!key %in% names(d)) {
     message(sprintf("'%s' not found in dictionary.", key))
     return(invisible(d))
@@ -106,13 +107,77 @@ vernacular_remove <- function(common) {
 #' @export
 vernacular_search <- function(pattern, where = c("both", "keys", "values")) {
   where <- match.arg(where)
-  d     <- .vdict()
-  hits  <- switch(
+  d <- .vdict()
+  hits <- switch(
     where,
-    keys   = grepl(pattern, names(d), ignore.case = TRUE),
-    values = grepl(pattern, d,        ignore.case = TRUE),
-    both   = grepl(pattern, names(d), ignore.case = TRUE) |
-             grepl(pattern, d,        ignore.case = TRUE)
+    keys = grepl(pattern, names(d), ignore.case = TRUE),
+    values = grepl(pattern, d, ignore.case = TRUE),
+    both = grepl(pattern, names(d), ignore.case = TRUE) |
+      grepl(pattern, d, ignore.case = TRUE)
   )
   d[hits]
+}
+
+#' Apply vernacular corrections to taxon_clean
+#'
+#' Iterates over the \code{taxon_clean} column of a data frame (or a bare
+#' character vector) and replaces any pattern from the vernacular dictionary
+#' found at the START of the string (case-insensitive, longest key first)
+#' with its canonical form, preserving any trailing epithet.
+#'
+#' This is meant to be called as the LAST step of the cleaning pipeline
+#' (Step 1), so that \code{taxon_clean} is already correct before automatic
+#' resolution begins.
+#'
+#' Example: \code{"pseudo nitzschia delicatissima"} ->
+#' \code{"Pseudo-nitzschia delicatissima"}
+#'
+#' @param x A data frame with a \code{taxon_clean} column, or a bare
+#'   character vector of cleaned taxon names.
+#' @param col Character. Name of the column to correct when \code{x} is a
+#'   data frame. Default: \code{"taxon_clean"}.
+#'
+#' @return The same object as \code{x} with corrections applied where
+#'   patterns matched.
+#' @export
+apply_vernacular_corrections <- function(x, col = "taxon_clean") {
+  .correct <- function(taxon_vec) {
+    dict <- .vdict()
+    keys <- names(dict)[order(nchar(names(dict)), decreasing = TRUE)]
+    vapply(
+      taxon_vec,
+      function(v) {
+        if (is.na(v) || trimws(v) == "") {
+          return(v)
+        }
+        vl <- tolower(trimws(v))
+        for (k in keys) {
+          if (startsWith(vl, k)) {
+            suffix <- trimws(substr(v, nchar(k) + 1L, nchar(v)))
+            corrected <- dict[[k]]
+            return(
+              if (nchar(suffix) > 0L) paste(corrected, suffix) else corrected
+            )
+          }
+        }
+        v
+      },
+      character(1L),
+      USE.NAMES = FALSE
+    )
+  }
+
+  if (is.data.frame(x)) {
+    if (!col %in% names(x)) {
+      stop(sprintf("Column '%s' not found in data frame.", col))
+    }
+    x[[col]] <- .correct(x[[col]])
+    return(x)
+  }
+
+  if (is.character(x)) {
+    return(.correct(x))
+  }
+
+  stop("`x` must be a data frame or a character vector.")
 }

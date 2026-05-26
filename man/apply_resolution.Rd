@@ -23,3 +23,4 @@ The updated data frame.
 Writes all resolution fields (IDs, names, status, method, full taxonomy)
 into the specified row of the working data frame.
 }
+\keyword{internal}

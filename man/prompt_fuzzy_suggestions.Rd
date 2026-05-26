@@ -24,3 +24,4 @@ Displays ranked WoRMS candidates grouped by tier (good, binomial parent,
 longshot, genus fallback) and prompts the user to accept one, enter an
 AphiaID manually, flag for removal, request expert review, or skip.
 }
+\keyword{internal}

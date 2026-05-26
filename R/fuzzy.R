@@ -554,7 +554,7 @@ search_by_token_editdist <- function(
 #' @importFrom purrr map_dbl
 #' @importFrom worrms wm_record
 #'
-#' @export
+#' @keywords internal
 search_worms_fuzzy_suggestions <- function(
   taxon_clean,
   original_taxon,
@@ -1025,7 +1025,7 @@ search_worms_fuzzy_suggestions <- function(
 #'   `action == "accept"`, fields `aphiaid`, `type`, `name`, and
 #'   `binomial_suffix`.
 #'
-#' @export
+#' @keywords internal
 prompt_fuzzy_suggestions <- function(suggestions, original_taxon, taxon_clean) {
   repeat {
     cat("\n")
@@ -1250,7 +1250,7 @@ prompt_fuzzy_suggestions <- function(suggestions, original_taxon, taxon_clean) {
 #'
 #' @importFrom worrms wm_record wm_name2id wm_records_name
 #'
-#' @export
+#' @keywords internal
 prompt_manual_aphiaid <- function() {
   repeat {
     cat("Enter AphiaID (integer) or scientific name [s = skip]: ")
@@ -1370,7 +1370,7 @@ prompt_manual_aphiaid <- function() {
 #' @return A named list with `action` (`"ok"` or `"retry"`) and `notes`
 #'   (character or `NA_character_`).
 #'
-#' @export
+#' @keywords internal
 prompt_resolution_notes <- function(matched_name, accepted_name) {
   cat(sprintf(" Matched: '%s' -> '%s'\n", matched_name, accepted_name))
   cat(" Add notes [Enter to skip] or [r]etry: ")
@@ -1399,7 +1399,7 @@ prompt_resolution_notes <- function(matched_name, accepted_name) {
 #'
 #' @importFrom worrms wm_record wm_classification
 #'
-#' @export
+#' @keywords internal
 fetch_worms_full_record <- function(aphia_id, timeout_sec = 15) {
   if (is.na(aphia_id) || is.null(aphia_id)) {
     return(NULL)
@@ -1506,7 +1506,7 @@ fetch_worms_full_record <- function(aphia_id, timeout_sec = 15) {
 #'
 #' @return The updated data frame.
 #'
-#' @export
+#' @keywords internal
 apply_resolution <- function(df, idx, worms_data, resolution_type) {
   method_name <- switch(
     resolution_type,

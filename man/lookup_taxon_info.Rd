@@ -26,3 +26,4 @@ Searches a named list (dictionary) for a taxon name and returns
 resolution metadata. Returns a tibble with \code{found = FALSE} if the
 name is not present.
 }
+\keyword{internal}

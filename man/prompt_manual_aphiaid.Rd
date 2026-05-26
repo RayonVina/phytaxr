@@ -14,3 +14,4 @@ plus \code{aphiaid} and \code{type} when accepted.
 Allows the user to enter an AphiaID (integer) or a scientific name directly.
 Supports fuzzy fallback when exact name lookup fails.
 }
+\keyword{internal}

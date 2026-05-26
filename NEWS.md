@@ -1,3 +1,29 @@
+# phytaxr 0.2.7
+
+### New features
+
+* `apply_vernacular_corrections()`: new function that applies the internal
+  vernacular dictionary as a pattern-replacement step over `taxon_clean`.
+  Unlike the exact-match lookup used in resolution, this function searches
+  for dictionary keys as prefixes within the cleaned name (case-insensitive,
+  longest-key-first to avoid partial matches) and replaces them with their
+  canonical form, preserving any trailing epithet. Intended to be called as
+  the final step of the cleaning pipeline (Step 1), so that `taxon_clean`
+  is already well-formed before automatic resolution begins.
+  Example: `"pseudo nitzschia delicatissima"` →
+  `"Pseudo-nitzschia delicatissima"`.
+
+* Vernacular dictionary expanded with *Pseudo-nitzschia* entries: canonical
+  genus name (`"pseudo nitzschia"`, `"pseudonitzschia"`) and 10 common
+  typographic variants (missing letters, transposed characters).
+
+* Internal housekeeping: `ensure_resolution_schema()`, `lookup_taxon_info()`,
+  `lookup_taxonomy_info()`, `fetch_worms_full_record()`,
+  `prompt_fuzzy_suggestions()`, `prompt_manual_aphiaid()`,
+  `prompt_resolution_notes()`, and `search_worms_fuzzy_suggestions()` are
+  now correctly marked as internal (`@keywords internal`) and removed from
+  the public namespace.
+
 # phytaxr 0.2.5
 
 ## New features

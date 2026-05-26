@@ -17,3 +17,4 @@ A character string: \code{paste0(a, b)}.
 \description{
 Shorthand for \code{paste0(a, b)}.
 }
+\keyword{internal}

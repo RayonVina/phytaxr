@@ -3,7 +3,7 @@
 <!-- badges: start -->
 [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 ![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)
-![Version: 0.2.6](https://img.shields.io/badge/version-0.2.6-blue.svg)
+![Version: 0.2.7](https://img.shields.io/badge/version-0.2.7-blue.svg)
 <!-- badges: end -->
 
 **PhyTaxR** provides tools for cleaning, standardising, and resolving
@@ -83,7 +83,8 @@ df_clean <- df |>
   split_separator_entries()              |> # unfold /, &, +, or entries
   process_generic_taxa()                 |> # vernacular → scientific name
   clean_trailing_hyphens()              |> # trailing/isolated hyphens
-  remove_short_interstitial_tokens()        # 1–2 char genus abbreviation artefacts
+  remove_short_interstitial_tokens()     |> # 1–2 char genus abbreviation artefacts
+  apply_vernacular_corrections()            # prefix-based name correction from dictionary
 
 # ── Stage 2: Automatic resolution ─────────────────────────────────
 # Run all steps in one call (recommended)
@@ -144,7 +145,7 @@ Each function takes a data frame with a `taxon_clean` column and returns
 it modified. They must be called in order.
 
 | Step | Function | What it does |
-|------|----------|--------------| 
+|------|----------|--------------|
 | 1 | `normalize_characters()` | Encoding, diacritics, invisible spaces |
 | 2 | `process_taxonomic_prefixes()` | O./C./F./P. rank prefixes |
 | 3 | `process_incertae_entries()` | cf., aff., *incertae sedis*, s.l., etc. |
@@ -163,9 +164,10 @@ it modified. They must be called in order.
 | 10g | `move_authors_to_epithet()` | Authorships and dates |
 | 11 | `remove_sp_tokens()` | Residual sp/spp/ssp in epithet |
 | 12 | `split_separator_entries()` | Unfold `/`, `&`, `+`, `or` entries |
-| 13 | `process_generic_taxa()` | Vernacular → scientific name |
+| 13 | `process_generic_taxa()` | Vernacular → scientific name (exact match) |
 | 14 | `clean_trailing_hyphens()` | Trailing/isolated hyphens |
 | 15 | `remove_short_interstitial_tokens()` | 1–2 char genus abbreviation artefacts (e.g. `p`, `p-n`) |
+| 16 | `apply_vernacular_corrections()` | Prefix-based name correction from the vernacular dictionary — replaces known patterns at the start of `taxon_clean` with their canonical form, preserving any trailing epithet (e.g. `"pseudo nitzschia delicatissima"` → `"Pseudo-nitzschia delicatissima"`) |
 
 ---
 
@@ -260,7 +262,19 @@ df_final <- process_fuzzy_batch(
 
 The package ships an internal dictionary of common phytoplankton vernacular
 names (e.g. `"diatom"` → `"Bacillariophyceae"`, `"dinoflagellate"` →
-`"Dinoflagellata"`). `process_generic_taxa()` uses it automatically.
+`"Dinoflagellata"`). Two functions use it at different points of the
+cleaning pipeline:
+
+- **`process_generic_taxa()`** (step 13) — exact match against the full
+  `taxon_clean` string. Handles standalone vernacular names
+  (e.g. `"diatoms"` → `"Bacillariophyceae"`).
+- **`apply_vernacular_corrections()`** (step 16) — prefix-based search:
+  iterates over every `taxon_clean` value and, if a dictionary key is
+  found at the *start* of the string (case-insensitive, longest key
+  first), replaces it with its canonical form while preserving any
+  trailing epithet. Handles genus-level typos and normalisation errors
+  introduced during cleaning (e.g. `"pseudo nitzschia delicatissima"` →
+  `"Pseudo-nitzschia delicatissima"`).
 
 ```r
 # List all entries
@@ -277,6 +291,9 @@ vernacular_add("green alga", "Chlorophyta")
 vernacular_update("diatom", "Bacillariophyta")
 vernacular_remove("green alga")
 ```
+
+To make dictionary changes permanent, edit `data-raw/vernacular.R` and
+re-run `source("data-raw/vernacular.R")`.
 
 ---
 
@@ -300,7 +317,7 @@ vernacular_remove("green alga")
 If you use **PhyTaxR** in published work, please cite it as:
 
 > Rayón Viña, F. (2026). *PhyTaxR: Phytoplankton Taxonomic Curation Tools*.
-> R package version 0.2.6.
+> R package version 0.2.7.
 > <https://github.com/RayonVina/phytaxr>
 
 ---
