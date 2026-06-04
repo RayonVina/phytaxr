@@ -84,7 +84,7 @@ df_clean <- df |>
   remove_sp_tokens()                     |> # residual sp/spp/ssp in epithet
   split_separator_entries()              |> # unfold /, &, +, or entries
   process_generic_taxa()                 |> # vernacular → scientific name
-  clean_trailing_hyphens()              |> # trailing/isolated hyphens
+  clean_trailing_hyphens()               |> # trailing/isolated hyphens
   remove_short_interstitial_tokens()     |> # 1–2 char genus abbreviation artefacts
   apply_vernacular_corrections()            # prefix-based name correction from dictionary
 
