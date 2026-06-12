@@ -630,7 +630,14 @@ search_worms_fuzzy_minor <- function(
           }
           list(found = FALSE)
         },
-        .options = furrr::furrr_options(seed = TRUE)
+        .options = furrr::furrr_options(
+          seed    = TRUE,
+          globals = list(
+            calculate_similarity = calculate_similarity,
+            verify_genus_exists  = verify_genus_exists,
+            worms_with_timeout   = worms_with_timeout
+          )
+        )
       )
     )
 

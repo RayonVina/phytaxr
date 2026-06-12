@@ -108,7 +108,7 @@ test_that("process_fuzzy_batch accepts a custom col on already-resolved rows", {
     df,
     genus_vocab = character(0),
     epithet_vocab = character(0),
-    col = "clean_name",
+    taxon_clean_col = "clean_name",
     checkpoint_file = NULL
   )
   expect_s3_class(result, "data.frame")

@@ -3,10 +3,11 @@
 <!-- badges: start -->
 [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 ![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)
-![Version: 0.2.7](https://img.shields.io/badge/version-0.2.7-blue.svg)
+![Version: 0.2.8](https://img.shields.io/badge/version-0.2.8-blue.svg)
 [![R-CMD-check](https://github.com/RayonVina/phytaxr/actions/workflows/r.yml/badge.svg)](https://github.com/RayonVina/phytaxr/actions/workflows/r.yml)
 ![Last commit](https://img.shields.io/github/last-commit/RayonVina/phytaxr?style=flat-square&color=b4befe)
 <!-- badges: end -->
+
 
 **PhyTaxR** provides tools for cleaning, standardising, and resolving
 phytoplankton taxon names against external taxonomic databases
@@ -111,15 +112,17 @@ epithet_vocab <- build_epithet_vocabulary(df_res)
 # Progress is saved automatically to a checkpoint file so the session can
 # be interrupted and resumed without losing work.
 df_final <- process_fuzzy_batch(
-  df          = df_res,
-  genus_vocab = genus_vocab,
-  epithet_vocab = epithet_vocab,
-  batch_size          = 10,
-  checkpoint_file     = "phytaxr_step3_checkpoint.rds",
-  min_similarity      = 0.85,
-  max_suggestions     = 15,
-  edit_max_dist       = 3,
-  timeout_sec         = 15
+  df              = df_res,
+  genus_vocab     = genus_vocab,
+  epithet_vocab   = epithet_vocab,
+  taxon_col       = "taxon",
+  taxon_clean_col = "taxon_clean",
+  batch_size      = 10,
+  checkpoint_file = "phytaxr_step3_checkpoint.rds",
+  min_similarity  = 0.85,
+  max_suggestions = 15,
+  edit_max_dist   = 3,
+  timeout_sec     = 15
 )
 
 # Inspect
@@ -215,6 +218,11 @@ automated correction, or names absent from WoRMS/GBIF.
 
 | Parameter | Default | Description |
 |-----------|---------|-------------|
+| `taxon_col` | `"taxon"` | Column with the original verbatim taxon name (display only) |
+| `taxon_clean_col` | `"taxon_clean"` | Column with the cleaned taxon name used for WoRMS searches |
+| `aphiaid_col` | `"matched_aphiaid"` | Column used to identify unresolved rows (`NA` = unresolved) |
+| `flag_col` | `"flag_for_removal"` | Column for removal flags |
+| `method_col` | `"resolution_method"` | Column for resolution method |
 | `batch_size` | 10 | Names reviewed per interactive round |
 | `checkpoint_file` | `"phytaxr_step3_checkpoint.rds"` | Path for auto-save |
 | `min_similarity` | 0.85 | Minimum similarity score to show a candidate |
@@ -319,7 +327,7 @@ re-run `source("data-raw/vernacular.R")`.
 If you use **PhyTaxR** in published work, please cite it as:
 
 > Rayón Viña, F. (2026). *PhyTaxR: Phytoplankton Taxonomic Curation Tools*.
-> R package version 0.2.7.
+> R package version 0.2.8.
 > <https://github.com/RayonVina/phytaxr>
 
 ---

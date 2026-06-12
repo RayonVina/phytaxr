@@ -8,7 +8,11 @@ process_fuzzy_batch(
   df,
   genus_vocab,
   epithet_vocab,
-  col = "taxon_clean",
+  taxon_col = "taxon",
+  taxon_clean_col = "taxon_clean",
+  aphiaid_col = "matched_aphiaid",
+  flag_col = "flag_for_removal",
+  method_col = "resolution_method",
   batch_size = 10,
   checkpoint_file = "phytaxr_step6_checkpoint.rds",
   min_similarity = 0.85,
@@ -28,8 +32,20 @@ cleaning + automatic resolution pipeline).}
 
 \item{epithet_vocab}{Character vector from \code{\link[=build_epithet_vocabulary]{build_epithet_vocabulary()}}.}
 
-\item{col}{Character. Name of the column to use as the cleaned taxon name
-source. Default \code{"taxon_clean"}.}
+\item{taxon_col}{Character. Column with the original verbatim taxon
+name (used for display). Default \code{"taxon"}.}
+
+\item{taxon_clean_col}{Character. Column with the cleaned taxon name
+(used for WoRMS searches). Default \code{"taxon_clean"}.}
+
+\item{aphiaid_col}{Character. Column used to identify unresolved rows
+(\code{NA} = unresolved). Default \code{"matched_aphiaid"}.}
+
+\item{flag_col}{Character. Column for removal flags. Default
+\code{"flag_for_removal"}.}
+
+\item{method_col}{Character. Column for resolution method. Default
+\code{"resolution_method"}.}
 
 \item{batch_size}{Integer. Number of entries to process before pausing for
 continuation confirmation. Default \code{10}.}

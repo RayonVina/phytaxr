@@ -568,7 +568,7 @@ search_worms_fuzzy_suggestions <- function(
   edit_max_candidates = 15,
   timeout_sec = 15
 ) {
-  if (is.na(taxon_clean) || trimws(taxon_clean) == "") {
+  if (is.na(taxon_clean) || trimws(as.character(taxon_clean)) == "") {
     return(list(
       good = NULL,
       longshot = NULL,
@@ -579,7 +579,7 @@ search_worms_fuzzy_suggestions <- function(
 
   # Pre-normalise
   normalized <- normalize_taxonomic_name(taxon_clean, genus_vocab)
-  if (normalized != taxon_clean) {
+  if (!is.na(normalized) && normalized != taxon_clean) {
     cat(sprintf(" -> Normalized: '%s' -> '%s'\n", taxon_clean, normalized))
     taxon_clean <- normalized
   }
@@ -1031,7 +1031,7 @@ prompt_fuzzy_suggestions <- function(suggestions, original_taxon, taxon_clean) {
     cat("\n")
     cat(strrep("=", 70), "\n", sep = "")
     cat(sprintf("Original: '%s'\n", original_taxon))
-    if (original_taxon != taxon_clean) {
+    if (!is.na(original_taxon) && original_taxon != taxon_clean) {
       cat(sprintf("Cleaned:  '%s'\n", taxon_clean))
     }
     cat(strrep("-", 70), "\n", sep = "")
@@ -1613,8 +1613,16 @@ save_progress <- function(
 #'   the function is called, it is loaded automatically and processing
 #'   resumes from where it left off. Set to `NULL` to disable checkpointing.
 #'   Default `"phytaxr_step6_checkpoint.rds"`.
-#' @param col Character. Name of the column to use as the cleaned taxon name
-#'   source. Default `"taxon_clean"`.
+#' @param taxon_col       Character. Column with the original verbatim taxon
+#'   name (used for display). Default `"taxon"`.
+#' @param taxon_clean_col Character. Column with the cleaned taxon name
+#'   (used for WoRMS searches). Default `"taxon_clean"`.
+#' @param aphiaid_col     Character. Column used to identify unresolved rows
+#'   (`NA` = unresolved). Default `"matched_aphiaid"`.
+#' @param flag_col        Character. Column for removal flags. Default
+#'   `"flag_for_removal"`.
+#' @param method_col      Character. Column for resolution method. Default
+#'   `"resolution_method"`.
 #'
 #' @return The updated data frame.
 #'
@@ -1625,7 +1633,11 @@ process_fuzzy_batch <- function(
   df,
   genus_vocab,
   epithet_vocab,
-  col = "taxon_clean",
+  taxon_col = "taxon",
+  taxon_clean_col = "taxon_clean",
+  aphiaid_col = "matched_aphiaid",
+  flag_col = "flag_for_removal",
+  method_col = "resolution_method",
   batch_size = 10,
   checkpoint_file = "phytaxr_step6_checkpoint.rds",
   min_similarity = 0.85,
@@ -1645,13 +1657,14 @@ process_fuzzy_batch <- function(
     }
     if (!is.null(ckpt$epithet_vocab)) epithet_vocab <- ckpt$epithet_vocab
   }
-  df <- resolve_col(df, col)
+  df <- resolve_col(df, taxon_clean_col)
+  taxon_clean_col <- "taxon_clean"
   df <- ensure_resolution_schema(df)
 
   unresolved_idx <- which(
-    is.na(df$matched_aphiaid) &
-      (is.na(df$resolution_method) | df$resolution_method != "expert_review") &
-      (is.na(df$flag_for_removal) | df$flag_for_removal != TRUE)
+    is.na(df[[aphiaid_col]]) &
+      (is.na(df[[method_col]]) | df[[method_col]] != "expert_review") &
+      (is.na(df[[flag_col]]) | df[[flag_col]] != TRUE)
   )
   total_unresolved <- length(unresolved_idx)
 
@@ -1681,8 +1694,8 @@ process_fuzzy_batch <- function(
 
     for (i in seq_along(batch_indices)) {
       idx <- batch_indices[i]
-      original <- df$taxon[idx]
-      cleaned <- df[[col]][idx]
+      original <- df[[taxon_col]][idx]
+      cleaned <- df[[taxon_clean_col]][idx]
 
       cat(sprintf(
         "\nEntry %d of %d\n%s\n",

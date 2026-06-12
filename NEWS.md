@@ -1,3 +1,28 @@
+# phytaxr 0.2.8
+
+## Bug fixes
+
+- `process_fuzzy_batch()`: fixed crash (`missing value where TRUE/FALSE needed`)
+  when `taxon_clean_col` pointed to a column renamed internally by `resolve_col()`.
+  After `resolve_col()` executes, the internal variable `taxon_clean_col` is now
+  updated to `"taxon_clean"` so that subsequent row-level lookups find the column.
+
+- `search_worms_fuzzy_suggestions()`: added `trimws(as.character(...))` guard and
+  `!is.na()` check on the normalised name to prevent the cascade from crashing on
+  `NA` values in `taxon_clean`.
+
+- `prompt_fuzzy_suggestions()`: added `!is.na(original_taxon)` guard before the
+  string comparison `original_taxon != taxon_clean`, preventing a crash when the
+  original taxon field is `NA`.
+
+## New features
+
+- `process_fuzzy_batch()`: the five key column names are now configurable via
+  explicit parameters (`taxon_col`, `taxon_clean_col`, `aphiaid_col`, `flag_col`,
+  `method_col`), all with sensible defaults. This allows the function to be run
+  on data frames that use different column naming conventions without renaming
+  columns beforehand. The old `col` parameter has been removed.
+
 # phytaxr 0.2.7
 
 ### New features
