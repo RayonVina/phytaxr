@@ -25,7 +25,7 @@ with its canonical form, preserving any trailing epithet.
 }
 \details{
 This is meant to be called as the LAST step of the cleaning pipeline
-(Step 1), so that \code{taxon_clean} is already correct before automatic
+(Stage 1), so that \code{taxon_clean} is already correct before automatic
 resolution begins.
 
 Example: \code{"pseudo nitzschia delicatissima"} ->

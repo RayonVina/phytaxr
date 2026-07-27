@@ -2,7 +2,7 @@
 % Please edit documentation in R/strict.R
 \name{search_worms_taxamatch}
 \alias{search_worms_taxamatch}
-\title{Step 5.2 -- WoRMS Taxamatch}
+\title{WoRMS Taxamatch}
 \usage{
 search_worms_taxamatch(df, col = "taxon_clean")
 }

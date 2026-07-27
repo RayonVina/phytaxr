@@ -1,3 +1,25 @@
+# phytaxr 0.2.9
+
+## Bug fixes
+
+- Progress bars in `search_worms_priority()`, `search_worms_taxamatch()`,
+  `search_gbif_strict()`, `resolve_taxonomic_status()`,
+  `search_worms_fuzzy_minor()`, and `get_taxonomy()` now render correctly
+  in non-interactive terminal sessions (e.g. remote SSH connections via
+  Positron/RStudio) by forcing progress bar output with `force = TRUE`.
+
+## Minor improvements
+
+- Removed legacy step numbering (`Step 5.x`, `Step 6.x`, `§5.x`) inherited
+  from the original script in console output, function
+  documentation (`@title`), and internal code comments across
+  `R/strict.R`, `R/fuzzy.R`, and `R/vernacular.R`. This numbering no
+  longer matched the package's current stage-based structure (Stage 1:
+  Cleaning, Stage 2: Automatic resolution, Stage 3: Semi-automatic fuzzy
+  resolution).
+- Added `.github` to `.Rbuildignore` to prevent it from being flagged
+  during `R CMD check`.
+
 # phytaxr 0.2.8
 
 ## Bug fixes

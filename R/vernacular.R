@@ -126,7 +126,7 @@ vernacular_search <- function(pattern, where = c("both", "keys", "values")) {
 #' with its canonical form, preserving any trailing epithet.
 #'
 #' This is meant to be called as the LAST step of the cleaning pipeline
-#' (Step 1), so that \code{taxon_clean} is already correct before automatic
+#' (Stage 1), so that \code{taxon_clean} is already correct before automatic
 #' resolution begins.
 #'
 #' Example: \code{"pseudo nitzschia delicatissima"} ->

@@ -1,5 +1,5 @@
 # R/fuzzy.R
-# Semi-automatic fuzzy resolution -- Step 6 of the taxonomy pipeline.
+# Semi-automatic fuzzy resolution -- Stage 3 of the taxonomy pipeline.
 # Provides vocabulary builders, WoRMS REST wrappers, edit-distance helpers,
 # the cascading suggestion orchestrator, and the interactive batch loop.
 

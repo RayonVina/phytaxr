@@ -2,7 +2,7 @@
 % Please edit documentation in R/strict.R
 \name{search_worms_priority}
 \alias{search_worms_priority}
-\title{Step 5.1 -- WoRMS exact search}
+\title{WoRMS exact search}
 \usage{
 search_worms_priority(df, col = "taxon_clean")
 }

@@ -1,10 +1,10 @@
 # R/strict.R
-# Automatic strict resolution pipeline -- Step 5 of the taxonomy pipeline.
-# Mirrors §5 of master_taxonomy.R exactly.
+# Automatic strict resolution pipeline -- Stage 2 of the taxonomy pipeline.
+# Mirrors the automatic resolution logic of master_taxonomy.R.
 # Functions are called sequentially on the unique_taxon_clean data frame.
 
 # ============================================================================
-# UTILITY FUNCTIONS (§5.2)
+# UTILITY FUNCTIONS
 # ============================================================================
 
 #' Call the GBIF species match API
@@ -68,10 +68,10 @@ cross_validate_with_worms <- function(gbif_matched_name) {
 }
 
 # ============================================================================
-# PIPELINE FUNCTIONS (§5.3)
+# PIPELINE FUNCTIONS
 # ============================================================================
 
-#' Step 5.1 -- WoRMS exact search
+#' WoRMS exact search
 #'
 #' For each unresolved row in `df`, attempts an exact name lookup in WoRMS
 #' using [worms_robust_search()]. Fills `matched_aphiaid`, `matched_name`,
@@ -111,7 +111,7 @@ search_worms_priority <- function(df, col = "taxon_clean") {
   }
   df <- resolve_col(df, col)
   df <- ensure_resolution_schema(df)
-  cat("--- 5.1 WoRMS Priority (Exact) ---\n")
+  cat("--- WoRMS Priority (Exact) ---\n")
 
   unresolved_indices <- which(is.na(df$matched_aphiaid))
   if (length(unresolved_indices) == 0) {
@@ -125,7 +125,8 @@ search_worms_priority <- function(df, col = "taxon_clean") {
     format = "  [:bar] :percent (:current/:total) :eta",
     total = length(unresolved_indices),
     clear = FALSE,
-    width = 80
+    width = 80,
+    force = TRUE
   )
 
   resolved_count <- 0
@@ -165,7 +166,7 @@ search_worms_priority <- function(df, col = "taxon_clean") {
 
 # ----------------------------------------
 
-#' Step 5.2 -- WoRMS Taxamatch
+#' WoRMS Taxamatch
 #'
 #' For each unresolved row with a name of >= 6 characters (excluding
 #' "unidentified / unknown / not classified"), queries the WoRMS Taxamatch
@@ -203,7 +204,7 @@ search_worms_taxamatch <- function(df, col = "taxon_clean") {
   }
   df <- resolve_col(df, col)
   df <- ensure_resolution_schema(df)
-  cat("--- 5.2 WoRMS Taxamatch ---\n")
+  cat("--- WoRMS Taxamatch ---\n")
 
   unresolved_indices <- which(is.na(df$matched_aphiaid))
   if (length(unresolved_indices) == 0) {
@@ -231,7 +232,8 @@ search_worms_taxamatch <- function(df, col = "taxon_clean") {
     format = "  [:bar] :percent (:current/:total) :eta",
     total = length(candidate_names),
     clear = FALSE,
-    width = 80
+    width = 80,
+    force = TRUE
   )
 
   resolved_count <- 0
@@ -295,7 +297,7 @@ search_worms_taxamatch <- function(df, col = "taxon_clean") {
 
 # ----------------------------------------
 
-#' Step 5.3 -- GBIF strict (confidence >= 99, EXACT, cross-validated with WoRMS)
+#' GBIF strict (confidence >= 99, EXACT, cross-validated with WoRMS)
 #'
 #' For each remaining unresolved row, queries GBIF and accepts the match only
 #' when confidence is >= 99, matchType is EXACT, and the returned name is
@@ -331,7 +333,7 @@ search_gbif_strict <- function(df, col = "taxon_clean") {
   }
   df <- resolve_col(df, col)
   df <- ensure_resolution_schema(df)
-  cat("--- 5.3 GBIF Strict ---\n")
+  cat("--- GBIF Strict ---\n")
 
   unresolved_indices <- which(is.na(df$matched_aphiaid))
   if (length(unresolved_indices) == 0) {
@@ -345,7 +347,8 @@ search_gbif_strict <- function(df, col = "taxon_clean") {
     format = "  [:bar] :percent (:current/:total) :eta",
     total = length(unresolved_indices),
     clear = FALSE,
-    width = 80
+    width = 80,
+    force = TRUE
   )
 
   resolved_count <- 0
@@ -381,7 +384,7 @@ search_gbif_strict <- function(df, col = "taxon_clean") {
 
 # ----------------------------------------
 
-#' Step 5.4 -- Taxonomic status resolution
+#' Taxonomic status resolution
 #'
 #' For all rows resolved via WoRMS, fetches the full WoRMS record and, if the
 #' status is not "accepted", follows the `valid_AphiaID` pointer to fill
@@ -419,7 +422,7 @@ resolve_taxonomic_status <- function(df, col = "taxon_clean") {
   }
   df <- resolve_col(df, col)
   df <- ensure_resolution_schema(df)
-  cat("--- 5.4 Taxonomic Status Resolution ---\n")
+  cat("--- Taxonomic Status Resolution ---\n")
 
   resolved_indices <- which(!is.na(df$matched_aphiaid))
   if (length(resolved_indices) == 0) {
@@ -443,7 +446,8 @@ resolve_taxonomic_status <- function(df, col = "taxon_clean") {
     format = "  [:bar] :percent (:current/:total) :eta",
     total = length(needs_check),
     clear = FALSE,
-    width = 80
+    width = 80,
+    force = TRUE
   )
 
   for (i in needs_check) {
@@ -485,7 +489,7 @@ resolve_taxonomic_status <- function(df, col = "taxon_clean") {
 
 # ----------------------------------------
 
-#' Step 5.5 -- WoRMS fuzzy search (minor corrections)
+#' WoRMS fuzzy search (minor corrections)
 #'
 #' For each remaining unresolved row whose name has >= 6 characters and
 #' contains at least two words (excluding names with "classified"), queries
@@ -542,7 +546,7 @@ search_worms_fuzzy_minor <- function(
   }
   df <- resolve_col(df, col)
   df <- ensure_resolution_schema(df)
-  cat("--- 5.5 WoRMS Fuzzy (Minor Corrections) ---\n")
+  cat("--- WoRMS Fuzzy (Minor Corrections) ---\n")
 
   unresolved_indices <- which(is.na(df$matched_aphiaid))
   if (length(unresolved_indices) == 0) {
@@ -570,7 +574,8 @@ search_worms_fuzzy_minor <- function(
     format = "  [:bar] :percent (:current/:total) :eta",
     total = nrow(candidates_df),
     clear = FALSE,
-    width = 80
+    width = 80,
+    force = TRUE
   )
 
   candidates_df <- candidates_df |>
@@ -631,11 +636,11 @@ search_worms_fuzzy_minor <- function(
           list(found = FALSE)
         },
         .options = furrr::furrr_options(
-          seed    = TRUE,
+          seed = TRUE,
           globals = list(
             calculate_similarity = calculate_similarity,
-            verify_genus_exists  = verify_genus_exists,
-            worms_with_timeout   = worms_with_timeout
+            verify_genus_exists = verify_genus_exists,
+            worms_with_timeout = worms_with_timeout
           )
         )
       )
@@ -675,10 +680,10 @@ search_worms_fuzzy_minor <- function(
 }
 
 # ============================================================================
-# TAXONOMY RETRIEVAL (§5.6)
+# TAXONOMY RETRIEVAL
 # ============================================================================
 
-#' Step 5.6 -- Retrieve full WoRMS taxonomy
+#' Retrieve full WoRMS taxonomy
 #'
 #' For every row with a non-`NA` `matched_aphiaid` (or `accepted_aphiaid`),
 #' fetches the full WoRMS classification and populates the taxonomic rank
@@ -717,7 +722,7 @@ get_taxonomy <- function(df, col = "taxon_clean") {
   }
   df <- resolve_col(df, col)
   df <- ensure_resolution_schema(df)
-  cat("--- 5.6 Taxonomy Retrieval ---\n")
+  cat("--- Taxonomy Retrieval ---\n")
 
   tax_ranks <- c(
     "kingdom",
@@ -764,7 +769,8 @@ get_taxonomy <- function(df, col = "taxon_clean") {
     format = "  [:bar] :percent (:current/:total) :eta",
     total = length(resolved_indices),
     clear = FALSE,
-    width = 80
+    width = 80,
+    force = TRUE
   )
 
   for (i in resolved_indices) {
@@ -800,13 +806,13 @@ get_taxonomy <- function(df, col = "taxon_clean") {
 }
 
 # ============================================================================
-# PIPELINE ORCHESTRATOR (§5.4)
+# PIPELINE ORCHESTRATOR
 # ============================================================================
 
-#' Run the full Step 5 automatic resolution pipeline
+#' Run the full automatic resolution pipeline
 #'
 #' Executes the six pipeline steps sequentially on `df` and prints a
-#' resolution summary at the end. Equivalent to the §5.4 block in
+#' resolution summary at the end. Equivalent to the pipeline orchestrator block in
 #' `master_taxonomy.R`.
 #'
 #' Calls [ensure_resolution_schema()] on entry so that the pipeline can be

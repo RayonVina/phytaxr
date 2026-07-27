@@ -2,7 +2,7 @@
 % Please edit documentation in R/strict.R
 \name{get_taxonomy}
 \alias{get_taxonomy}
-\title{Step 5.6 -- Retrieve full WoRMS taxonomy}
+\title{Retrieve full WoRMS taxonomy}
 \usage{
 get_taxonomy(df, col = "taxon_clean")
 }

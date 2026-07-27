@@ -2,7 +2,7 @@
 % Please edit documentation in R/strict.R
 \name{search_worms_fuzzy_minor}
 \alias{search_worms_fuzzy_minor}
-\title{Step 5.5 -- WoRMS fuzzy search (minor corrections)}
+\title{WoRMS fuzzy search (minor corrections)}
 \usage{
 search_worms_fuzzy_minor(
   df,

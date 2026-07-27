@@ -2,7 +2,7 @@
 % Please edit documentation in R/strict.R
 \name{search_gbif_strict}
 \alias{search_gbif_strict}
-\title{Step 5.3 -- GBIF strict (confidence >= 99, EXACT, cross-validated with WoRMS)}
+\title{GBIF strict (confidence >= 99, EXACT, cross-validated with WoRMS)}
 \usage{
 search_gbif_strict(df, col = "taxon_clean")
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/strict.R
 \name{run_resolution_pipeline}
 \alias{run_resolution_pipeline}
-\title{Run the full Step 5 automatic resolution pipeline}
+\title{Run the full automatic resolution pipeline}
 \usage{
 run_resolution_pipeline(
   df,
@@ -28,7 +28,7 @@ The fully resolved \code{df}.
 }
 \description{
 Executes the six pipeline steps sequentially on \code{df} and prints a
-resolution summary at the end. Equivalent to the §5.4 block in
+resolution summary at the end. Equivalent to the pipeline orchestrator block in
 \code{master_taxonomy.R}.
 }
 \details{

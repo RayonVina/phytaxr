@@ -2,7 +2,7 @@
 % Please edit documentation in R/strict.R
 \name{resolve_taxonomic_status}
 \alias{resolve_taxonomic_status}
-\title{Step 5.4 -- Taxonomic status resolution}
+\title{Taxonomic status resolution}
 \usage{
 resolve_taxonomic_status(df, col = "taxon_clean")
 }

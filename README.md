@@ -3,7 +3,7 @@
 <!-- badges: start -->
 [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 ![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)
-![Version: 0.2.8](https://img.shields.io/badge/version-0.2.8-blue.svg)
+![Version: 0.2.9](https://img.shields.io/badge/version-0.2.9-blue.svg)
 [![R-CMD-check](https://github.com/RayonVina/phytaxr/actions/workflows/r.yml/badge.svg)](https://github.com/RayonVina/phytaxr/actions/workflows/r.yml)
 ![Last commit](https://img.shields.io/github/last-commit/RayonVina/phytaxr?style=flat-square&color=b4befe)
 <!-- badges: end -->
@@ -327,7 +327,7 @@ re-run `source("data-raw/vernacular.R")`.
 If you use **PhyTaxR** in published work, please cite it as:
 
 > Rayón Viña, F. (2026). *PhyTaxR: Phytoplankton Taxonomic Curation Tools*.
-> R package version 0.2.8.
+> R package version 0.2.9.
 > <https://github.com/RayonVina/phytaxr>
 
 ---
