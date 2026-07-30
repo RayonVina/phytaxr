@@ -1,3 +1,40 @@
+# phytaxr 0.3.0
+
+## New features
+
+- Step 1 cleaning functions are now **atomic**: all 20 sub-steps
+  (`normalize_characters()` through `remove_short_interstitial_tokens()`)
+  call a shared internal helper `ensure_cleaning_schema()` on entry, which
+  guarantees the working schema columns (`taxon_clean`, `tax_epithet`,
+  `uncertain`) exist even when only a raw `taxon` column is provided. This
+  allows individual cleaning functions to be run in isolation without
+  depending on previous steps for schema initialisation.
+
+- `run_cleaning_pipeline()` gains a clearer, symmetric interface with the
+  resolution pipeline: it now accepts either a plain character vector or a
+  data frame with a configurable input column via the `col` argument,
+  internally standardises the name to `taxon`, and returns a cleaned data
+  frame with `taxon_clean`, `tax_epithet`, and `uncertain` populated.
+
+- `apply_vernacular_corrections()` now supports being called directly on
+  raw data frames: when `x` is a data frame, `col` is the default
+  `"taxon_clean"` and that column is missing but `taxon` exists, the
+  function automatically initialises `taxon_clean` from `taxon` before
+  applying prefix-based corrections from the vernacular dictionary. This
+  preserves existing behaviour for character vectors and custom `col`
+  arguments while making the default data frame case more robust.
+
+## Bug fixes
+
+- `R/clean.R`: non-ASCII characters in regex patterns and comments have
+  been replaced with `\uxxxx` escapes or removed, ensuring the package
+  passes `R CMD check --as-cran` on platforms that enforce ASCII-only R
+  source files.
+- `.Rbuildignore`: added an entry for the top-level `paper/` directory to
+  exclude non-portable bibliography file names from the package tarball
+  and `R CMD check` inspection.
+
+
 # phytaxr 0.2.9
 
 ## Bug fixes

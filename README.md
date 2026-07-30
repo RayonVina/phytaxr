@@ -3,7 +3,7 @@
 <!-- badges: start -->
 [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 ![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)
-![Version: 0.2.9](https://img.shields.io/badge/version-0.2.9-blue.svg)
+![Version: 0.3.0](https://img.shields.io/badge/version-0.3.0-blue.svg)
 [![R-CMD-check](https://github.com/RayonVina/phytaxr/actions/workflows/r.yml/badge.svg)](https://github.com/RayonVina/phytaxr/actions/workflows/r.yml)
 ![Last commit](https://img.shields.io/github/last-commit/RayonVina/phytaxr?style=flat-square&color=b4befe)
 <!-- badges: end -->
@@ -46,6 +46,10 @@ The package implements a three-stage pipeline:
 All stages operate on plain data frames and are designed to be chained
 with the `|>` pipe. Resolution functions also accept a bare character
 vector directly, and support a custom column name via the `col` argument.
+Stage 1 cleaning functions are **atomic**: each sub-step can be
+called in isolation on a data frame that only contains a `taxon` column,
+and internally initialises the working schema (`taxon_clean`,
+`tax_epithet`, `uncertain`) before applying its transformation.
 
 ---
 
@@ -65,6 +69,14 @@ df <- tibble(taxon = c(
 ))
 
 # ── Stage 1: Cleaning ──────────────────────────────────────────────
+# Run the full Stage 1 cleaning pipeline in one call (recommended)
+df_clean <- run_cleaning_pipeline(df)
+
+# Or call individual cleaning steps in isolation — the schema is
+# initialised internally from `taxon` when needed.
+process_incertae_entries(tibble::tibble(taxon = "Chaetoceros cf. debilis"))
+
+# Or step by step over a dataframe:
 df_clean <- df |>
   normalize_characters()                 |> # encoding, diacritics, invisible spaces
   process_taxonomic_prefixes()           |> # O./C./F./P. rank prefixes
@@ -146,8 +158,11 @@ search_worms_priority(df, col = "species")
 
 ## Cleaning pipeline
 
-Each function takes a data frame with a `taxon_clean` column and returns
-it modified. They must be called in order.
+Each function takes a data frame and returns it modified. When used as
+a pipeline, they must be called in order, but each step can also be
+applied independently to a data frame with a `taxon` column: internal
+helpers initialise `taxon_clean`, `tax_epithet`, and `uncertain` when
+missing.
 
 | Step | Function | What it does |
 |------|----------|--------------|
@@ -327,7 +342,7 @@ re-run `source("data-raw/vernacular.R")`.
 If you use **PhyTaxR** in published work, please cite it as:
 
 > Rayón Viña, F. (2026). *PhyTaxR: Phytoplankton Taxonomic Curation Tools*.
-> R package version 0.2.9.
+> R package version 0.3.0.
 > <https://github.com/RayonVina/phytaxr>
 
 ---

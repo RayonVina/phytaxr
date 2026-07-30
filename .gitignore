@@ -13,3 +13,5 @@ src/**.so
 /Meta/
 # paper data
 /paper/
+
+**/*.quarto_ipynb
