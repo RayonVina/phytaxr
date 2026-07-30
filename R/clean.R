@@ -6,23 +6,78 @@ utils::globalVariables(c(
   "rank_token"
 ))
 
+# ============================================================================
+# UTILITY FUNCTIONS
+# ============================================================================
+
+#' Ensure the cleaning schema exists
+#'
+#' Guarantees that the input data frame contains the columns required by the
+#' Step 1 cleaning functions. If missing, `taxon_clean` is initialised from
+#' `taxon`, `tax_epithet` is created as `NA_character_`, and `uncertain` is
+#' created as `FALSE`. Existing values are preserved.
+#'
+#' @param df A data frame with at least a `taxon` column.
+#'
+#' @return The input `df` with cleaning-schema columns guaranteed to exist.
+#'
+#' @keywords internal
+ensure_cleaning_schema <- function(df) {
+  if (!is.data.frame(df)) {
+    stop("`df` must be a data.frame or tibble.")
+  }
+
+  if (!"taxon" %in% names(df)) {
+    stop(
+      sprintf(
+        "Column 'taxon' not found in data frame. Available columns: %s",
+        paste(names(df), collapse = ", ")
+      )
+    )
+  }
+
+  if (!"taxon_clean" %in% names(df)) {
+    df$taxon_clean <- df$taxon
+  }
+
+  if (!"tax_epithet" %in% names(df)) {
+    df$tax_epithet <- NA_character_
+  }
+
+  if (!"uncertain" %in% names(df)) {
+    df$uncertain <- FALSE
+  }
+
+  df
+}
+
 #' Normalize special characters in taxon names
 #'
-#' Converts taxon names to UTF-8, replaces typographic variants (curly quotes,
-#' em-dashes, invisible spaces, etc.), collapses whitespace, and initializes
-#' the `taxon_clean`, `tax_epithet`, and `uncertain` output columns.
+#' Converts taxon names to UTF-8, replaces typographic variants (curly
+#' quotes, em-dashes, invisible spaces, etc.) and collapses whitespace in
+#' `taxon_clean`.
 #'
-#' @param df A data frame with a `taxon` column (character).
-#' @return The input data frame with columns `taxon_clean`, `tax_epithet`
-#'   (NA), and `uncertain` (FALSE).
+#' @param df A data frame with at least a `taxon` column (character).
+#' @return The input data frame with `taxon_clean` normalized. `tax_epithet`
+#'   and `uncertain` are left untouched if already present, or initialised
+#'   (`NA`/`FALSE`) via [ensure_cleaning_schema()] if missing.
 #' @importFrom dplyr mutate
 #' @importFrom stringr str_replace_all str_squish
 #' @importFrom stringi stri_trans_nfd stri_trans_nfc
 #' @export
 normalize_characters <- function(df) {
+  df <- ensure_cleaning_schema(df)
   df |>
     dplyr::mutate(
-      taxon_clean = taxon,
+      taxon_clean = iconv(taxon_clean, from = "", to = "UTF-8", sub = "byte"),
+      ...
+    )
+}
+normalize_characters <- function(df) {
+  df <- ensure_cleaning_schema(df)
+
+  df |>
+    dplyr::mutate(
       taxon_clean = iconv(taxon_clean, from = "", to = "UTF-8", sub = "byte"),
       taxon_clean = stringr::str_replace_all(
         taxon_clean,
@@ -61,9 +116,7 @@ normalize_characters <- function(df) {
       taxon_clean = stringr::str_squish(taxon_clean),
       taxon_clean = stringi::stri_trans_nfc(stringi::stri_trans_nfd(
         taxon_clean
-      )),
-      tax_epithet = NA_character_,
-      uncertain = FALSE
+      ))
     )
 }
 
@@ -79,6 +132,7 @@ normalize_characters <- function(df) {
 #' @importFrom stringr str_detect str_extract str_remove str_trim str_squish
 #' @export
 process_taxonomic_prefixes <- function(df) {
+  df <- ensure_cleaning_schema(df)
   rank_pattern <- "^(O|C|F|P)\\.\\s+"
   df |>
     dplyr::mutate(
@@ -139,6 +193,7 @@ process_taxonomic_prefixes <- function(df) {
 #' @importFrom purrr map_chr
 #' @export
 process_incertae_entries <- function(df) {
+  df <- ensure_cleaning_schema(df)
   qualif_pattern <- "\\b(?:cf|aff|nr|agg|indet|incerta|incertae sedis|sensu\\s+lato|sensu\\s+stricto|type|complex|group|juv|et)\\.?(?=\\b)"
   df |>
     dplyr::mutate(
@@ -224,6 +279,7 @@ process_incertae_entries <- function(df) {
 #' @importFrom stringr str_extract str_remove str_squish regex
 #' @export
 process_sp_entries <- function(df) {
+  df <- ensure_cleaning_schema(df)
   sp_pattern <- stringr::regex(
     "\\b(?:sp\\d+\\.?|sp\\.?|spp\\.?)\\b",
     ignore_case = TRUE
@@ -256,6 +312,7 @@ process_sp_entries <- function(df) {
 #' @importFrom stringr str_extract str_remove str_squish
 #' @export
 process_bracket_entries <- function(df) {
+  df <- ensure_cleaning_schema(df)
   df |>
     dplyr::mutate(
       bracket_info = stringr::str_extract(taxon_clean, "\\s*-\\[.*"),
@@ -287,6 +344,7 @@ process_bracket_entries <- function(df) {
 #' @importFrom purrr map_chr
 #' @export
 move_size_to_epithet <- function(df) {
+  df <- ensure_cleaning_schema(df)
   size_pattern <- paste0(
     "(?:<=|>=|<|>|\u2248|~|\u2264|\u2265)?\\s*",
     "\\d+(?:\\.\\d+)?",
@@ -330,6 +388,7 @@ move_size_to_epithet <- function(df) {
 #' @importFrom stringr str_extract str_remove_all str_squish
 #' @export
 process_epithet_entries <- function(df) {
+  df <- ensure_cleaning_schema(df)
   df |>
     dplyr::mutate(
       tax_epithet = dplyr::coalesce(
@@ -353,6 +412,7 @@ process_epithet_entries <- function(df) {
 #' @importFrom stringr str_replace_all str_squish regex
 #' @export
 normalize_infraspecific_ranks <- function(df) {
+  df <- ensure_cleaning_schema(df)
   df |>
     dplyr::mutate(
       taxon_clean = stringr::str_replace_all(
@@ -395,6 +455,7 @@ normalize_infraspecific_ranks <- function(df) {
 #' @importFrom stringr str_replace_all str_squish regex
 #' @export
 remove_dots <- function(df) {
+  df <- ensure_cleaning_schema(df)
   df |>
     dplyr::mutate(
       taxon_clean = stringr::str_replace_all(
@@ -427,6 +488,7 @@ remove_dots <- function(df) {
 #' @importFrom purrr map_chr
 #' @export
 move_reproductive_structures <- function(df) {
+  df <- ensure_cleaning_schema(df)
   repro_pattern <- "\\b(cysts?|gametes?|resting|rest|spores?|filaments?|cells?|sphere|naked|fusiform|round|small|large|tiny|micro|nano|symbiont|with\\s+symbiont|epiphytic|solitary|colonial|chains?|clustered|green|blue|olive|brown|golden|planktonic|benthic|cluster|coccoid)\\b"
   df |>
     dplyr::mutate(
@@ -467,6 +529,7 @@ move_reproductive_structures <- function(df) {
 #' @importFrom purrr map_chr
 #' @export
 move_uncertainty_descriptors <- function(df) {
+  df <- ensure_cleaning_schema(df)
   uncertainty_pattern <- "\\b(unid|unidentified|unknown|not\\s+classified|not\\s+classfied|unclassified|unclassifies|uncertain|undetermined|undeterminable|undertermined|unresolved|unclear|dubious|questionable|other\\s+forms|catalogued)\\b"
   df |>
     dplyr::mutate(
@@ -506,6 +569,7 @@ move_uncertainty_descriptors <- function(df) {
 #' @importFrom purrr map_chr
 #' @export
 move_morphological_descriptors <- function(df) {
+  df <- ensure_cleaning_schema(df)
   morpho_pattern <- "\\b(centric|pennate|fusiform|round|spherical|elongated|curved|straight|branched|unbranched|motile|non-motile|thecate|athecate|armored|armoured|unarmored|unarmoured|gymnodinioid)\\b"
   df |>
     dplyr::mutate(
@@ -543,6 +607,7 @@ move_morphological_descriptors <- function(df) {
 #' @importFrom stringr str_extract str_remove str_squish regex
 #' @export
 move_with_descriptors <- function(df) {
+  df <- ensure_cleaning_schema(df)
   df |>
     dplyr::mutate(
       with_info = stringr::str_extract(
@@ -577,6 +642,7 @@ move_with_descriptors <- function(df) {
 #' @importFrom stringr str_extract str_remove str_squish
 #' @export
 move_formia_to_epithet <- function(df) {
+  df <- ensure_cleaning_schema(df)
   df |>
     dplyr::mutate(
       forma_info = stringr::str_extract(taxon_clean, "(?<=\\b f \\b)[^\\s].*$"),
@@ -605,6 +671,7 @@ move_formia_to_epithet <- function(df) {
 #' @importFrom stringr str_trim str_replace str_extract
 #' @export
 move_commas_to_epithet <- function(df) {
+  df <- ensure_cleaning_schema(df)
   df |>
     dplyr::mutate(
       before = stringr::str_trim(stringr::str_replace(taxon_clean, ",.*$", "")),
@@ -633,6 +700,7 @@ move_commas_to_epithet <- function(df) {
 #' @importFrom stringr str_detect str_extract str_remove str_squish regex
 #' @export
 move_authors_to_epithet <- function(df) {
+  df <- ensure_cleaning_schema(df)
   author_pattern <- stringr::regex(
     paste0(
       "\\s+",
@@ -690,6 +758,7 @@ move_authors_to_epithet <- function(df) {
 #' @importFrom stringr str_remove_all str_squish regex
 #' @export
 remove_sp_tokens <- function(df) {
+  df <- ensure_cleaning_schema(df)
   df |>
     dplyr::mutate(
       tax_epithet = stringr::str_remove_all(
@@ -714,6 +783,7 @@ remove_sp_tokens <- function(df) {
 #' @importFrom tidyr uncount
 #' @export
 split_separator_entries <- function(df) {
+  df <- ensure_cleaning_schema(df)
   df |>
     dplyr::mutate(original_id = dplyr::row_number()) |>
     dplyr::mutate(
@@ -874,6 +944,7 @@ split_separator_entries <- function(df) {
 #' @importFrom stringr str_detect str_extract str_remove_all str_squish str_to_lower regex
 #' @export
 process_generic_taxa <- function(df) {
+  df <- ensure_cleaning_schema(df)
   common_names_map <- c(
     "dinoflagellate" = "Dinoflagellata",
     "dinoflagellates" = "Dinoflagellata",
@@ -1025,6 +1096,7 @@ process_generic_taxa <- function(df) {
 #' @importFrom stringr str_remove str_replace_all str_squish
 #' @export
 clean_trailing_hyphens <- function(df) {
+  df <- ensure_cleaning_schema(df)
   df |>
     dplyr::mutate(
       taxon_clean = stringr::str_remove(taxon_clean, "\\s*-\\s*$") |>
@@ -1069,6 +1141,7 @@ clean_trailing_hyphens <- function(df) {
 #' @importFrom stringr str_detect str_replace str_match str_squish regex
 #' @export
 remove_short_interstitial_tokens <- function(df) {
+  df <- ensure_cleaning_schema(df)
   # --- Rank markers (longest alternatives first to avoid partial match) ------
   rank_alts <- paste(
     "subvar\\.?",
@@ -1106,7 +1179,6 @@ remove_short_interstitial_tokens <- function(df) {
 
   df |>
     dplyr::mutate(
-      # Bloque 1: detección y extracción
       has_rank_token = stringr::str_detect(taxon_clean, rank_pattern),
       has_short_token = !has_rank_token &
         stringr::str_detect(taxon_clean, short_pattern),
@@ -1117,7 +1189,6 @@ remove_short_interstitial_tokens <- function(df) {
       )
     ) |>
     dplyr::mutate(
-      # Bloque 2: uso de las variables anteriores
       tax_epithet = dplyr::case_when(
         has_rank_token & !is.na(rank_token) & !is.na(tax_epithet) ~
           stringr::str_squish(paste(tax_epithet, rank_token)),
@@ -1140,4 +1211,99 @@ remove_short_interstitial_tokens <- function(df) {
       )
     ) |>
     dplyr::select(-has_rank_token, -has_short_token, -rank_token)
+}
+
+#' Run the full cleaning pipeline (Step 1)
+#'
+#' Executes all cleaning sub-functions sequentially in the canonical order
+#' used by the package. For data frame input, the result is equivalent to
+#' calling each cleaning function one by one with the native pipe.
+#'
+#' The function also accepts a character vector (or a single string), which
+#' is converted internally to a data frame with a `taxon` column before
+#' running the same pipeline.
+#'
+#' @param df A data frame/tibble with a raw taxon column, or a character
+#'   vector of raw taxon names.
+#' @param col Character. Name of the input column containing the raw taxon
+#'   names. Default `"taxon"`.
+#'
+#' @return A cleaned data frame. When input is a character vector, returns a
+#'   formatted query-style result.
+#'
+#' @examples
+#' \dontrun{
+#' run_cleaning_pipeline(c("Chaetoceros cf. decipiens", "O. sinensis [cyst]"))
+#'
+#' df <- data.frame(taxon = c("Thalassiosira weissflogii var. x"))
+#' run_cleaning_pipeline(df)
+#'
+#' df2 <- data.frame(raw_name = c("Emiliania huxleyi s.l."))
+#' run_cleaning_pipeline(df2, col = "raw_name")
+#' }
+#'
+#' @export
+run_cleaning_pipeline <- function(df, col = "taxon") {
+  query_mode <- is.character(df)
+
+  if (query_mode) {
+    original_col <- col
+    df <- tibble::tibble(taxon = as.character(df))
+  } else {
+    if (!is.data.frame(df)) {
+      stop("`df` must be either a data.frame/tibble or a character vector.")
+    }
+
+    if (!col %in% names(df)) {
+      stop(
+        sprintf(
+          "Column '%s' not found in data frame. Available columns: %s",
+          col,
+          paste(names(df), collapse = ", ")
+        )
+      )
+    }
+
+    original_col <- col
+
+    if (col != "taxon") {
+      names(df)[names(df) == col] <- "taxon"
+    }
+  }
+
+  df <- df |>
+    normalize_characters() |>
+    process_taxonomic_prefixes() |>
+    process_incertae_entries() |>
+    process_sp_entries() |>
+    process_bracket_entries() |>
+    move_size_to_epithet() |>
+    process_epithet_entries() |>
+    normalize_infraspecific_ranks() |>
+    remove_dots() |>
+    move_reproductive_structures() |>
+    move_uncertainty_descriptors() |>
+    move_morphological_descriptors() |>
+    move_with_descriptors() |>
+    move_formia_to_epithet() |>
+    move_commas_to_epithet() |>
+    move_authors_to_epithet() |>
+    remove_sp_tokens() |>
+    split_separator_entries() |>
+    process_generic_taxa() |>
+    clean_trailing_hyphens() |>
+    remove_short_interstitial_tokens() |>
+    apply_vernacular_corrections()
+
+  if (query_mode) {
+    return(format_query_result(df, original_col))
+  }
+
+  cat("=== Cleaning Pipeline Summary ===\n")
+  cat(sprintf("  Rows processed: %d\n", nrow(df)))
+  if ("taxon_clean" %in% names(df)) {
+    cat(sprintf("  Unique taxa:    %d\n", length(unique(df$taxon_clean))))
+  }
+
+  df
 }

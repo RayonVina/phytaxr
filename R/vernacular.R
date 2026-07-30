@@ -129,6 +129,12 @@ vernacular_search <- function(pattern, where = c("both", "keys", "values")) {
 #' (Stage 1), so that \code{taxon_clean} is already correct before automatic
 #' resolution begins.
 #'
+#' When \code{x} is a data frame and the target \code{col} is missing but
+#' equals the default \code{"taxon_clean"}, the function falls back to
+#' initialising it from \code{taxon} (if present), so that it can also be
+#' called in isolation on a raw data frame without requiring the full
+#' cleaning pipeline to have run first.
+#'
 #' Example: \code{"pseudo nitzschia delicatissima"} ->
 #' \code{"Pseudo-nitzschia delicatissima"}
 #'
@@ -169,7 +175,11 @@ apply_vernacular_corrections <- function(x, col = "taxon_clean") {
 
   if (is.data.frame(x)) {
     if (!col %in% names(x)) {
-      stop(sprintf("Column '%s' not found in data frame.", col))
+      if (col == "taxon_clean" && "taxon" %in% names(x)) {
+        x[["taxon_clean"]] <- x[["taxon"]]
+      } else {
+        stop(sprintf("Column '%s' not found in data frame.", col))
+      }
     }
     x[[col]] <- .correct(x[[col]])
     return(x)

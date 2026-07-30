@@ -7,14 +7,15 @@
 normalize_characters(df)
 }
 \arguments{
-\item{df}{A data frame with a \code{taxon} column (character).}
+\item{df}{A data frame with at least a \code{taxon} column (character).}
 }
 \value{
-The input data frame with columns \code{taxon_clean}, \code{tax_epithet}
-(NA), and \code{uncertain} (FALSE).
+The input data frame with \code{taxon_clean} normalized. \code{tax_epithet}
+and \code{uncertain} are left untouched if already present, or initialised
+(\code{NA}/\code{FALSE}) via \code{\link[=ensure_cleaning_schema]{ensure_cleaning_schema()}} if missing.
 }
 \description{
-Converts taxon names to UTF-8, replaces typographic variants (curly quotes,
-em-dashes, invisible spaces, etc.), collapses whitespace, and initializes
-the \code{taxon_clean}, \code{tax_epithet}, and \code{uncertain} output columns.
+Converts taxon names to UTF-8, replaces typographic variants (curly
+quotes, em-dashes, invisible spaces, etc.) and collapses whitespace in
+\code{taxon_clean}.
 }

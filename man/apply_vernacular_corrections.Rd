@@ -28,6 +28,12 @@ This is meant to be called as the LAST step of the cleaning pipeline
 (Stage 1), so that \code{taxon_clean} is already correct before automatic
 resolution begins.
 
+When \code{x} is a data frame and the target \code{col} is missing but
+equals the default \code{"taxon_clean"}, the function falls back to
+initialising it from \code{taxon} (if present), so that it can also be
+called in isolation on a raw data frame without requiring the full
+cleaning pipeline to have run first.
+
 Example: \code{"pseudo nitzschia delicatissima"} ->
 \code{"Pseudo-nitzschia delicatissima"}
 }
