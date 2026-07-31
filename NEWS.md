@@ -1,3 +1,20 @@
+# phytaxr 0.3.1
+
+## Documentation
+- Refined `README.md` and roxygen-facing package documentation to reflect the current Stage 1 cleaning workflow and latest package state.
+- Added vignettes and aligned user-facing documentation with the current exported interface.
+
+## Testing
+- Rebuilt `tests/testthat/test-clean.R` for the current cleaning API.
+- Added direct tests for the internal `ensure_cleaning_schema()` helper.
+- Added coverage for atomic Stage 1 cleaning functions operating on bare `taxon`-only data frames.
+- Added wrapper tests for `run_cleaning_pipeline()` in both query mode and `data.frame` mode.
+- Updated assertions to respect the formatted return value used by `run_cleaning_pipeline()` when the input is a character vector.
+
+## Maintenance
+- Bumped package version to 0.3.1.
+- Synchronized package metadata, README version references, and NEWS after the post-0.3.0 test/documentation refresh.
+
 # phytaxr 0.3.0
 
 ## New features
