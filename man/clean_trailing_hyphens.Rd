@@ -2,17 +2,21 @@
 % Please edit documentation in R/clean.R
 \name{clean_trailing_hyphens}
 \alias{clean_trailing_hyphens}
-\title{Remove trailing hyphens and isolated dashes}
+\title{Remove trailing hyphens and isolated dashes
+Final cleanup that removes trailing - constructs and isolated hyphens
+left over after other cleaning steps.}
 \usage{
 clean_trailing_hyphens(df)
 }
 \arguments{
-\item{df}{A data frame processed by \code{\link[=process_generic_taxa]{process_generic_taxa()}}.}
+\item{df}{A data frame with at least a taxon column. The cleaning
+schema is ensured internally before applying the final hyphen cleanup.}
 }
 \value{
-The input data frame with cleaned \code{taxon_clean}.
+The input data frame with cleaned taxon_clean.
 }
 \description{
-Final cleanup: removes trailing \code{-} constructs and isolated hyphens
+Remove trailing hyphens and isolated dashes
+Final cleanup that removes trailing - constructs and isolated hyphens
 left over after other cleaning steps.
 }

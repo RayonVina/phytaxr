@@ -2,17 +2,22 @@
 % Please edit documentation in R/clean.R
 \name{move_authors_to_epithet}
 \alias{move_authors_to_epithet}
-\title{Move author strings to tax_epithet}
+\title{Move author strings to tax_epithet
+Detects trailing author citations (e.g. Hustedt 1930, (Cleve) Gran)
+in taxon_clean and moves them to tax_epithet.}
 \usage{
 move_authors_to_epithet(df)
 }
 \arguments{
-\item{df}{A data frame processed by \code{\link[=move_commas_to_epithet]{move_commas_to_epithet()}}.}
+\item{df}{A data frame with at least a taxon column. Missing
+cleaning-schema columns are added automatically via
+\code{\link[=ensure_cleaning_schema]{ensure_cleaning_schema()}}.}
 }
 \value{
-The input data frame with updated \code{taxon_clean} and \code{tax_epithet}.
+The input data frame with updated taxon_clean and tax_epithet.
 }
 \description{
-Detects trailing author citations (e.g. \verb{Hustedt 1930}, \verb{(Cleve) Gran})
-in \code{taxon_clean} and moves them to \code{tax_epithet}.
+Move author strings to tax_epithet
+Detects trailing author citations (e.g. Hustedt 1930, (Cleve) Gran)
+in taxon_clean and moves them to tax_epithet.
 }

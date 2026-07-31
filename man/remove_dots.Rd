@@ -2,17 +2,22 @@
 % Please edit documentation in R/clean.R
 \name{remove_dots}
 \alias{remove_dots}
-\title{Remove stray dots from taxon names}
+\title{Remove stray dots from taxon names
+Removes dots from taxon_clean while protecting dots that belong to
+infraspecific rank abbreviations such as var., f., and subsp..}
 \usage{
 remove_dots(df)
 }
 \arguments{
-\item{df}{A data frame processed by \code{\link[=normalize_infraspecific_ranks]{normalize_infraspecific_ranks()}}.}
+\item{df}{A data frame with at least a taxon column. Intended to
+operate on taxon_clean, which is initialised from taxon when
+needed.}
 }
 \value{
-The input data frame with dots removed from \code{taxon_clean}.
+The input data frame with dots removed from taxon_clean.
 }
 \description{
-Removes dots from \code{taxon_clean} while protecting dots that belong to
-infraspecific rank abbreviations (\code{var.}, \code{f.}, \code{subsp.}, etc.).
+Remove stray dots from taxon names
+Removes dots from taxon_clean while protecting dots that belong to
+infraspecific rank abbreviations such as var., f., and subsp..
 }

@@ -2,17 +2,21 @@
 % Please edit documentation in R/clean.R
 \name{process_bracket_entries}
 \alias{process_bracket_entries}
-\title{Extract bracket annotations (\verb{-[...]})}
+\title{Extract bracket annotations
+Moves bracket-style annotations of the form from taxon_clean
+to tax_epithet.}
 \usage{
 process_bracket_entries(df)
 }
 \arguments{
-\item{df}{A data frame processed by \code{\link[=process_sp_entries]{process_sp_entries()}}.}
+\item{df}{A data frame with at least a taxon column. The cleaning
+schema is ensured internally before processing.}
 }
 \value{
-The input data frame with updated \code{taxon_clean} and \code{tax_epithet}.
+The input data frame with updated taxon_clean and tax_epithet.
 }
 \description{
-Moves bracket-style annotations of the form \verb{-[...]} from \code{taxon_clean}
-to \code{tax_epithet}.
+Extract bracket annotations
+Moves bracket-style annotations of the form from taxon_clean
+to tax_epithet.
 }

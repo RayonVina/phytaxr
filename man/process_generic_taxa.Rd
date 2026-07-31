@@ -2,18 +2,22 @@
 % Please edit documentation in R/clean.R
 \name{process_generic_taxa}
 \alias{process_generic_taxa}
-\title{Map common English names to accepted taxonomic names}
+\title{Map common English names to accepted taxonomic names
+Replaces informal names and morphotypes (e.g. diatom, ciliate,
+gymnodinioid) with the corresponding accepted higher taxon name.}
 \usage{
 process_generic_taxa(df)
 }
 \arguments{
-\item{df}{A data frame processed by \code{\link[=split_separator_entries]{split_separator_entries()}}.}
+\item{df}{A data frame with at least a taxon column. Required cleaning
+columns are initialised internally when absent.}
 }
 \value{
-The input data frame with updated \code{taxon_clean}, \code{tax_epithet},
-and \code{uncertain}.
+The input data frame with updated taxon_clean, tax_epithet,
+and uncertain.
 }
 \description{
-Replaces informal names and morphotypes (e.g. \code{diatom}, \code{ciliate},
-\code{gymnodinioid}) with the corresponding accepted higher taxon name.
+Map common English names to accepted taxonomic names
+Replaces informal names and morphotypes (e.g. diatom, ciliate,
+gymnodinioid) with the corresponding accepted higher taxon name.
 }

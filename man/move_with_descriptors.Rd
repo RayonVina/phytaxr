@@ -2,17 +2,22 @@
 % Please edit documentation in R/clean.R
 \name{move_with_descriptors}
 \alias{move_with_descriptors}
-\title{Move 'with ...' clauses to tax_epithet}
+\title{Move with ... clauses to tax_epithet
+Detects trailing with ... clauses in taxon_clean and moves them to
+tax_epithet.}
 \usage{
 move_with_descriptors(df)
 }
 \arguments{
-\item{df}{A data frame processed by \code{\link[=move_morphological_descriptors]{move_morphological_descriptors()}}.}
+\item{df}{A data frame with at least a taxon column. The function can
+be used independently because the cleaning schema is initialised on
+entry when missing.}
 }
 \value{
-The input data frame with updated \code{taxon_clean} and \code{tax_epithet}.
+The input data frame with updated taxon_clean and tax_epithet.
 }
 \description{
-Detects \verb{with ...} trailing clauses in \code{taxon_clean} and moves them to
-\code{tax_epithet}.
+Move with ... clauses to tax_epithet
+Detects trailing with ... clauses in taxon_clean and moves them to
+tax_epithet.
 }

@@ -2,18 +2,24 @@
 % Please edit documentation in R/clean.R
 \name{process_taxonomic_prefixes}
 \alias{process_taxonomic_prefixes}
-\title{Extract rank prefixes (O., C., F., P.)}
+\title{Extract rank prefixes (O., C., F., P.)
+Detects and removes rank abbreviation prefixes such as O., C., F.,
+and P. from taxon_clean, storing rank information in tax_epithet.}
 \usage{
 process_taxonomic_prefixes(df)
 }
 \arguments{
-\item{df}{A data frame processed by \code{\link[=normalize_characters]{normalize_characters()}}.}
+\item{df}{A data frame with at least a taxon column. If the cleaning
+schema is missing, it is initialised internally via
+\code{\link[=ensure_cleaning_schema]{ensure_cleaning_schema()}}.}
 }
 \value{
-The input data frame with updated \code{taxon_clean}, \code{tax_epithet},
-and \code{uncertain}.
+The input data frame with updated taxon_clean, tax_epithet,
+and uncertain. Existing values in the cleaning schema are preserved
+unless modified by the current transformation.
 }
 \description{
-Detects and removes rank abbreviation prefixes such as \code{O.}, \code{C.}, \code{F.},
-\code{P.} from \code{taxon_clean}, storing rank information in \code{tax_epithet}.
+Extract rank prefixes (O., C., F., P.)
+Detects and removes rank abbreviation prefixes such as O., C., F.,
+and P. from taxon_clean, storing rank information in tax_epithet.
 }

@@ -2,18 +2,23 @@
 % Please edit documentation in R/clean.R
 \name{split_separator_entries}
 \alias{split_separator_entries}
-\title{Split entries with separators (/, &, +, or) into individual rows}
+\title{Split entries with separators (/, &, +, or) into individual rows
+Detects taxon names containing /, &, +, or or and unfolds them
+into separate rows, recording the aggregate partner in tax_epithet.}
 \usage{
 split_separator_entries(df)
 }
 \arguments{
-\item{df}{A data frame processed by \code{\link[=remove_sp_tokens]{remove_sp_tokens()}}.}
+\item{df}{A data frame with at least a taxon column. The function
+ensures the internal cleaning schema before splitting composite
+entries.}
 }
 \value{
 A data frame with potentially more rows than the input, with
-updated \code{taxon_clean}, \code{tax_epithet}, and \code{uncertain}.
+updated taxon_clean, tax_epithet, and uncertain.
 }
 \description{
-Detects taxon names containing \code{/}, \code{&}, \code{+}, or \code{or} and unfolds
-them into separate rows, recording the aggregate partner in \code{tax_epithet}.
+Split entries with separators (/, &, +, or) into individual rows
+Detects taxon names containing /, &, +, or or and unfolds them
+into separate rows, recording the aggregate partner in tax_epithet.
 }

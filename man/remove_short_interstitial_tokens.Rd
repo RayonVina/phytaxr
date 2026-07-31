@@ -2,43 +2,64 @@
 % Please edit documentation in R/clean.R
 \name{remove_short_interstitial_tokens}
 \alias{remove_short_interstitial_tokens}
-\title{Remove short interstitial tokens and infraspecific rank markers}
+\title{Remove short interstitial tokens and infraspecific rank markers
+After Stage 1 cleaning, tokens that appear between the genus and the
+specific epithet and that carry no independent taxonomic value are
+removed from taxon_clean. Two categories are handled:
+\enumerate{
+\item Short genus-initial abbreviations (1-2 lowercase letters,
+optionally hyphenated, e.g. ch, g, p-n): informal observer
+abbreviations such as "Chaetoceros ch affinis".
+\item Infraspecific rank markers (with or without trailing dot):
+standard botanical or algological rank abbreviations appearing between
+the species epithet and the infraspecific epithet, such as
+"Thalassiosira var. expecta" or "Nitzschia subsp. gracilis".
+The full list includes the common variants of subvar, subsp,
+subf, nothosubsp, nothovar, nsubsp, nvar, ssp, var,
+fo, f, cv, and morph.
+In both cases the token is removed from taxon_clean and uncertain is
+set to TRUE. For rank markers, the token is additionally preserved in
+tax_epithet as taxonomic metadata, whereas genus-initial abbreviations
+are silently discarded.
+This function is designed to be used as the last step of the full
+cleaning pipeline, after \code{\link[=clean_trailing_hyphens]{clean_trailing_hyphens()}}. It can still be
+called independently, but its canonical use is as the final
+normalisation step before \code{\link[=apply_vernacular_corrections]{apply_vernacular_corrections()}}.
+}}
 \usage{
 remove_short_interstitial_tokens(df)
 }
 \arguments{
-\item{df}{A data frame processed by \code{\link[=clean_trailing_hyphens]{clean_trailing_hyphens()}}.}
+\item{df}{A data frame with at least a taxon column. The cleaning
+schema is ensured internally before processing.}
 }
 \value{
-The input data frame with updated \code{taxon_clean}, \code{tax_epithet},
-and \code{uncertain}.
+The input data frame with updated taxon_clean, tax_epithet,
+and uncertain.
 }
 \description{
-After the cleaning pipeline, tokens that appear between the genus and the
-specific epithet and that carry no independent taxonomic value are removed
-from \code{taxon_clean}. Two categories are handled:
-}
-\details{
+Remove short interstitial tokens and infraspecific rank markers
+After Stage 1 cleaning, tokens that appear between the genus and the
+specific epithet and that carry no independent taxonomic value are
+removed from taxon_clean. Two categories are handled:
 \enumerate{
-\item \strong{Short genus-initial abbreviations} (1-2 lowercase letters, optionally
-hyphenated, e.g. \code{ch}, \code{g}, \code{p-n}): informal genus abbreviations inserted
-by observers (e.g. "Chaetoceros ch affinis").
-\item \strong{Infraspecific rank markers} (with or without trailing dot): standard
-botanical/algological rank abbreviations that appear between the species
-epithet and the infraspecific epithet (e.g. "Thalassiosira var. expecta",
-"Nitzschia subsp. gracilis"). The full list covers all ranks recognised by
-the ICN (Madrid Code) and ICZN, including their common dotless variants:
-\code{subvar}/\code{subvar.}, \code{subsp}/\code{subsp.}, \code{subf}/\code{subf.},
-\code{nothosubsp}/\code{nothosubsp.}, \code{nothovar}/\code{nothovar.},
-\code{nsubsp}/\code{nsubsp.}, \code{nvar}/\code{nvar.}, \code{ssp}/\code{ssp.}, \code{var}/\code{var.},
-\code{fo}/\code{fo.}, \code{f}/\code{f.}, \code{cv}/\code{cv.}, \code{morph}/\code{morph.}.
-}
-
-In both cases the token is removed from \code{taxon_clean} and \code{uncertain} is
-set to \code{TRUE}. For rank markers the token is additionally preserved in
-\code{tax_epithet} (as taxonomic metadata), whereas genus-initial abbreviations
+\item Short genus-initial abbreviations (1-2 lowercase letters,
+optionally hyphenated, e.g. ch, g, p-n): informal observer
+abbreviations such as "Chaetoceros ch affinis".
+\item Infraspecific rank markers (with or without trailing dot):
+standard botanical or algological rank abbreviations appearing between
+the species epithet and the infraspecific epithet, such as
+"Thalassiosira var. expecta" or "Nitzschia subsp. gracilis".
+The full list includes the common variants of subvar, subsp,
+subf, nothosubsp, nothovar, nsubsp, nvar, ssp, var,
+fo, f, cv, and morph.
+In both cases the token is removed from taxon_clean and uncertain is
+set to TRUE. For rank markers, the token is additionally preserved in
+tax_epithet as taxonomic metadata, whereas genus-initial abbreviations
 are silently discarded.
-
-This function must be called as the \strong{last step} of the cleaning pipeline,
-after \code{\link[=clean_trailing_hyphens]{clean_trailing_hyphens()}}.
+This function is designed to be used as the last step of the full
+cleaning pipeline, after \code{\link[=clean_trailing_hyphens]{clean_trailing_hyphens()}}. It can still be
+called independently, but its canonical use is as the final
+normalisation step before \code{\link[=apply_vernacular_corrections]{apply_vernacular_corrections()}}.
+}
 }

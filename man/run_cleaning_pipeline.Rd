@@ -2,40 +2,47 @@
 % Please edit documentation in R/clean.R
 \name{run_cleaning_pipeline}
 \alias{run_cleaning_pipeline}
-\title{Run the full cleaning pipeline (Step 1)}
+\title{Run the full cleaning pipeline (Stage 1)
+Executes all Stage 1 cleaning functions sequentially in the canonical
+order used by the package.
+Although individual cleaning functions are atomic and can be called
+independently, this wrapper provides the recommended entry point for
+routine use.
+The function also accepts a character vector (or a single string), which
+is converted internally to a data frame with a taxon column before
+running the same pipeline.}
 \usage{
 run_cleaning_pipeline(df, col = "taxon")
 }
 \arguments{
-\item{df}{A data frame/tibble with a raw taxon column, or a character
+\item{df}{A data frame or tibble with a raw taxon column, or a character
 vector of raw taxon names.}
 
 \item{col}{Character. Name of the input column containing the raw taxon
-names. Default \code{"taxon"}.}
+names. Default "taxon".}
 }
 \value{
-A cleaned data frame. When input is a character vector, returns a
-formatted query-style result.
+A cleaned data frame with the Stage 1 working columns populated,
+including taxon_clean, tax_epithet, and uncertain. When input is
+a character vector, returns a formatted query-style result.
 }
 \description{
-Executes all cleaning sub-functions sequentially in the canonical order
-used by the package. For data frame input, the result is equivalent to
-calling each cleaning function one by one with the native pipe.
-}
-\details{
+Run the full cleaning pipeline (Stage 1)
+Executes all Stage 1 cleaning functions sequentially in the canonical
+order used by the package.
+Although individual cleaning functions are atomic and can be called
+independently, this wrapper provides the recommended entry point for
+routine use.
 The function also accepts a character vector (or a single string), which
-is converted internally to a data frame with a \code{taxon} column before
+is converted internally to a data frame with a taxon column before
 running the same pipeline.
 }
 \examples{
 \dontrun{
 run_cleaning_pipeline(c("Chaetoceros cf. decipiens", "O. sinensis [cyst]"))
-
 df <- data.frame(taxon = c("Thalassiosira weissflogii var. x"))
 run_cleaning_pipeline(df)
-
 df2 <- data.frame(raw_name = c("Emiliania huxleyi s.l."))
 run_cleaning_pipeline(df2, col = "raw_name")
 }
-
 }

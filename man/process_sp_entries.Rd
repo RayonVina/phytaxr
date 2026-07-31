@@ -2,16 +2,21 @@
 % Please edit documentation in R/clean.R
 \name{process_sp_entries}
 \alias{process_sp_entries}
-\title{Extract sp./spp. designations}
+\title{Extract sp./spp. designations
+Moves sp., spp., sp1, and similar designations from taxon_clean
+to tax_epithet.}
 \usage{
 process_sp_entries(df)
 }
 \arguments{
-\item{df}{A data frame processed by \code{\link[=process_incertae_entries]{process_incertae_entries()}}.}
+\item{df}{A data frame with at least a taxon column. If taxon_clean,
+tax_epithet, or uncertain are missing, they are created internally.}
 }
 \value{
-The input data frame with updated \code{taxon_clean} and \code{tax_epithet}.
+The input data frame with updated taxon_clean and tax_epithet.
 }
 \description{
-Moves \code{sp.}, \code{spp.}, \code{sp1}, etc. from \code{taxon_clean} to \code{tax_epithet}.
+Extract sp./spp. designations
+Moves sp., spp., sp1, and similar designations from taxon_clean
+to tax_epithet.
 }

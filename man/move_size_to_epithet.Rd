@@ -2,17 +2,21 @@
 % Please edit documentation in R/clean.R
 \name{move_size_to_epithet}
 \alias{move_size_to_epithet}
-\title{Extract size information}
+\title{Extract size information
+Detects and moves numeric size expressions (e.g. 10-20 µm, >5 mm)
+from taxon_clean to tax_epithet.}
 \usage{
 move_size_to_epithet(df)
 }
 \arguments{
-\item{df}{A data frame processed by \code{\link[=process_bracket_entries]{process_bracket_entries()}}.}
+\item{df}{A data frame with at least a taxon column. Missing cleaning
+columns are initialised via \code{\link[=ensure_cleaning_schema]{ensure_cleaning_schema()}}.}
 }
 \value{
-The input data frame with updated \code{taxon_clean} and \code{tax_epithet}.
+The input data frame with updated taxon_clean and tax_epithet.
 }
 \description{
-Detects and moves numeric size expressions (e.g. \verb{10-20 \\u00B5m}, \verb{>5 mm})
-from \code{taxon_clean} to \code{tax_epithet}.
+Extract size information
+Detects and moves numeric size expressions (e.g. 10-20 µm, >5 mm)
+from taxon_clean to tax_epithet.
 }

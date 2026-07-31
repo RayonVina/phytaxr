@@ -2,20 +2,29 @@
 % Please edit documentation in R/clean.R
 \name{ensure_cleaning_schema}
 \alias{ensure_cleaning_schema}
-\title{Ensure the cleaning schema exists}
+\title{Ensure the cleaning schema exists
+Guarantees that the input data frame contains the working columns required
+by the Stage 1 cleaning functions. If missing, taxon_clean is
+initialised from taxon, tax_epithet is created as NA_character_, and
+uncertain is created as FALSE. Existing values are preserved.
+This helper is called internally by the cleaning functions so they can be
+used independently on a data frame containing only a taxon column.}
 \usage{
 ensure_cleaning_schema(df)
 }
 \arguments{
-\item{df}{A data frame with at least a \code{taxon} column.}
+\item{df}{A data frame with at least a taxon column.}
 }
 \value{
-The input \code{df} with cleaning-schema columns guaranteed to exist.
+The input df with cleaning-schema columns guaranteed to exist.
 }
 \description{
-Guarantees that the input data frame contains the columns required by the
-Step 1 cleaning functions. If missing, \code{taxon_clean} is initialised from
-\code{taxon}, \code{tax_epithet} is created as \code{NA_character_}, and \code{uncertain} is
-created as \code{FALSE}. Existing values are preserved.
+Ensure the cleaning schema exists
+Guarantees that the input data frame contains the working columns required
+by the Stage 1 cleaning functions. If missing, taxon_clean is
+initialised from taxon, tax_epithet is created as NA_character_, and
+uncertain is created as FALSE. Existing values are preserved.
+This helper is called internally by the cleaning functions so they can be
+used independently on a data frame containing only a taxon column.
 }
 \keyword{internal}

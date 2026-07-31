@@ -11,16 +11,14 @@ utils::globalVariables(c(
 # ============================================================================
 
 #' Ensure the cleaning schema exists
-#'
-#' Guarantees that the input data frame contains the columns required by the
-#' Step 1 cleaning functions. If missing, `taxon_clean` is initialised from
-#' `taxon`, `tax_epithet` is created as `NA_character_`, and `uncertain` is
-#' created as `FALSE`. Existing values are preserved.
-#'
-#' @param df A data frame with at least a `taxon` column.
-#'
-#' @return The input `df` with cleaning-schema columns guaranteed to exist.
-#'
+#' Guarantees that the input data frame contains the working columns required
+#' by the Stage 1 cleaning functions. If missing, taxon_clean is
+#' initialised from taxon, tax_epithet is created as NA_character_, and
+#' uncertain is created as FALSE. Existing values are preserved.
+#' This helper is called internally by the cleaning functions so they can be
+#' used independently on a data frame containing only a taxon column.
+#' @param df A data frame with at least a taxon column.
+#' @return The input df with cleaning-schema columns guaranteed to exist.
 #' @keywords internal
 ensure_cleaning_schema <- function(df) {
   if (!is.data.frame(df)) {
@@ -121,13 +119,14 @@ normalize_characters <- function(df) {
 }
 
 #' Extract rank prefixes (O., C., F., P.)
-#'
-#' Detects and removes rank abbreviation prefixes such as `O.`, `C.`, `F.`,
-#' `P.` from `taxon_clean`, storing rank information in `tax_epithet`.
-#'
-#' @param df A data frame processed by [normalize_characters()].
-#' @return The input data frame with updated `taxon_clean`, `tax_epithet`,
-#'   and `uncertain`.
+#' Detects and removes rank abbreviation prefixes such as O., C., F.,
+#' and P. from taxon_clean, storing rank information in tax_epithet.
+#' @param df A data frame with at least a taxon column. If the cleaning
+#' schema is missing, it is initialised internally via
+#' [ensure_cleaning_schema()].
+#' @return The input data frame with updated taxon_clean, tax_epithet,
+#' and uncertain. Existing values in the cleaning schema are preserved
+#' unless modified by the current transformation.
 #' @importFrom dplyr mutate select case_when if_else
 #' @importFrom stringr str_detect str_extract str_remove str_trim str_squish
 #' @export
@@ -180,14 +179,14 @@ process_taxonomic_prefixes <- function(df) {
 }
 
 #' Extract incertae sedis and qualification markers
-#'
-#' Detects and removes qualifiers such as `cf.`, `aff.`, `sensu lato`,
-#' `type`, `complex`, `group`, `?`, and parenthetical content from
-#' `taxon_clean`, storing them in `tax_epithet`.
-#'
-#' @param df A data frame processed by [process_taxonomic_prefixes()].
-#' @return The input data frame with updated `taxon_clean`, `tax_epithet`,
-#'   and `uncertain`.
+#' Detects and removes qualifiers such as cf., aff., sensu lato,
+#' type, complex, group, ?, and parenthetical content from
+#' taxon_clean, storing them in tax_epithet.
+#' @param df A data frame with at least a taxon column. The required
+#' cleaning columns are created internally via [ensure_cleaning_schema()]
+#' when missing.
+#' @return The input data frame with updated taxon_clean, tax_epithet,
+#' and uncertain.
 #' @importFrom dplyr mutate select case_when
 #' @importFrom stringr str_detect str_extract str_extract_all str_remove str_remove_all str_replace_all str_squish regex
 #' @importFrom purrr map_chr
@@ -270,11 +269,11 @@ process_incertae_entries <- function(df) {
 }
 
 #' Extract sp./spp. designations
-#'
-#' Moves `sp.`, `spp.`, `sp1`, etc. from `taxon_clean` to `tax_epithet`.
-#'
-#' @param df A data frame processed by [process_incertae_entries()].
-#' @return The input data frame with updated `taxon_clean` and `tax_epithet`.
+#' Moves sp., spp., sp1, and similar designations from taxon_clean
+#' to tax_epithet.
+#' @param df A data frame with at least a taxon column. If taxon_clean,
+#' tax_epithet, or uncertain are missing, they are created internally.
+#' @return The input data frame with updated taxon_clean and tax_epithet.
 #' @importFrom dplyr mutate select case_when
 #' @importFrom stringr str_extract str_remove str_squish regex
 #' @export
@@ -301,13 +300,12 @@ process_sp_entries <- function(df) {
     dplyr::select(-sp_num)
 }
 
-#' Extract bracket annotations (`-[...]`)
-#'
-#' Moves bracket-style annotations of the form `` -[...] `` from `taxon_clean`
-#' to `tax_epithet`.
-#'
-#' @param df A data frame processed by [process_sp_entries()].
-#' @return The input data frame with updated `taxon_clean` and `tax_epithet`.
+#' Extract bracket annotations
+#' Moves bracket-style annotations of the form from taxon_clean
+#' to tax_epithet.
+#' @param df A data frame with at least a taxon column. The cleaning
+#' schema is ensured internally before processing.
+#' @return The input data frame with updated taxon_clean and tax_epithet.
 #' @importFrom dplyr mutate select case_when
 #' @importFrom stringr str_extract str_remove str_squish
 #' @export
@@ -333,12 +331,11 @@ process_bracket_entries <- function(df) {
 }
 
 #' Extract size information
-#'
-#' Detects and moves numeric size expressions (e.g. `10-20 \u00B5m`, `>5 mm`)
-#' from `taxon_clean` to `tax_epithet`.
-#'
-#' @param df A data frame processed by [process_bracket_entries()].
-#' @return The input data frame with updated `taxon_clean` and `tax_epithet`.
+#' Detects and moves numeric size expressions (e.g. 10-20 µm, >5 mm)
+#' from taxon_clean to tax_epithet.
+#' @param df A data frame with at least a taxon column. Missing cleaning
+#' columns are initialised via [ensure_cleaning_schema()].
+#' @return The input data frame with updated taxon_clean and tax_epithet.
 #' @importFrom dplyr mutate select case_when
 #' @importFrom stringr str_extract_all str_remove_all str_replace_all str_squish regex
 #' @importFrom purrr map_chr
@@ -378,12 +375,12 @@ move_size_to_epithet <- function(df) {
 }
 
 #' Extract remaining parenthetical epithets
-#'
-#' Moves any remaining content in parentheses from `taxon_clean` to
-#' `tax_epithet`.
-#'
-#' @param df A data frame processed by [move_size_to_epithet()].
-#' @return The input data frame with updated `taxon_clean` and `tax_epithet`.
+#' Moves any remaining content in parentheses from taxon_clean to
+#' tax_epithet.
+#' @param df A data frame with at least a taxon column. The function
+#' operates on taxon_clean and initialises the cleaning schema when
+#' needed.
+#' @return The input data frame with updated taxon_clean and tax_epithet.
 #' @importFrom dplyr mutate
 #' @importFrom stringr str_extract str_remove_all str_squish
 #' @export
@@ -402,12 +399,11 @@ process_epithet_entries <- function(df) {
 }
 
 #' Normalize infraspecific rank notation
-#'
-#' Ensures consistent formatting of `var.`, `f.`, `subsp.`, `ssp.`, `cv.`
-#' in `taxon_clean` (space before, dot after, space after dot).
-#'
-#' @param df A data frame processed by [process_epithet_entries()].
-#' @return The input data frame with normalized `taxon_clean`.
+#' Ensures consistent formatting of var., f., subsp., ssp., and
+#' cv. in taxon_clean (space before, dot after, space after dot).
+#' @param df A data frame with at least a taxon column. The cleaning
+#' schema is created internally if not already present.
+#' @return The input data frame with normalized taxon_clean.
 #' @importFrom dplyr mutate
 #' @importFrom stringr str_replace_all str_squish regex
 #' @export
@@ -445,12 +441,12 @@ normalize_infraspecific_ranks <- function(df) {
 }
 
 #' Remove stray dots from taxon names
-#'
-#' Removes dots from `taxon_clean` while protecting dots that belong to
-#' infraspecific rank abbreviations (`var.`, `f.`, `subsp.`, etc.).
-#'
-#' @param df A data frame processed by [normalize_infraspecific_ranks()].
-#' @return The input data frame with dots removed from `taxon_clean`.
+#' Removes dots from taxon_clean while protecting dots that belong to
+#' infraspecific rank abbreviations such as var., f., and subsp..
+#' @param df A data frame with at least a taxon column. Intended to
+#' operate on taxon_clean, which is initialised from taxon when
+#' needed.
+#' @return The input data frame with dots removed from taxon_clean.
 #' @importFrom dplyr mutate
 #' @importFrom stringr str_replace_all str_squish regex
 #' @export
@@ -477,12 +473,11 @@ remove_dots <- function(df) {
 }
 
 #' Move reproductive and morphological structure terms to tax_epithet
-#'
-#' Detects terms like `cysts`, `spores`, `colonial`, `benthic`, etc. and
-#' moves them from `taxon_clean` to `tax_epithet`.
-#'
-#' @param df A data frame processed by [remove_dots()].
-#' @return The input data frame with updated `taxon_clean` and `tax_epithet`.
+#' Detects terms like cysts, spores, colonial, benthic, and similar
+#' descriptors, moving them from taxon_clean to tax_epithet.
+#' @param df A data frame with at least a taxon column. The required
+#' cleaning columns are ensured internally before processing.
+#' @return The input data frame with updated taxon_clean and tax_epithet.
 #' @importFrom dplyr mutate select case_when
 #' @importFrom stringr str_extract_all str_remove_all str_replace_all str_squish regex
 #' @importFrom purrr map_chr
@@ -516,14 +511,13 @@ move_reproductive_structures <- function(df) {
 }
 
 #' Move uncertainty descriptor terms to tax_epithet
-#'
-#' Detects terms like `unidentified`, `undetermined`, `unclassified`, etc.
-#' and moves them from `taxon_clean` to `tax_epithet`, also setting
-#' `uncertain = TRUE`.
-#'
-#' @param df A data frame processed by [move_reproductive_structures()].
-#' @return The input data frame with updated `taxon_clean`, `tax_epithet`,
-#'   and `uncertain`.
+#' Detects terms like unidentified, undetermined, unclassified, and
+#' similar descriptors, moving them from taxon_clean to tax_epithet and
+#' setting uncertain = TRUE.
+#' @param df A data frame with at least a taxon column. Missing cleaning
+#' columns are initialised internally via [ensure_cleaning_schema()].
+#' @return The input data frame with updated taxon_clean, tax_epithet,
+#' and uncertain.
 #' @importFrom dplyr mutate select case_when
 #' @importFrom stringr str_extract_all str_remove_all str_replace_all str_squish regex
 #' @importFrom purrr map_chr
@@ -558,12 +552,11 @@ move_uncertainty_descriptors <- function(df) {
 }
 
 #' Move morphological descriptor terms to tax_epithet
-#'
-#' Detects terms like `centric`, `pennate`, `thecate`, `armored`, etc. and
-#' moves them from `taxon_clean` to `tax_epithet`.
-#'
-#' @param df A data frame processed by [move_uncertainty_descriptors()].
-#' @return The input data frame with updated `taxon_clean` and `tax_epithet`.
+#' Detects terms like centric, pennate, thecate, armored, and
+#' similar descriptors, moving them from taxon_clean to tax_epithet.
+#' @param df A data frame with at least a taxon column. The cleaning
+#' schema is ensured internally before any transformation is applied.
+#' @return The input data frame with updated taxon_clean and tax_epithet.
 #' @importFrom dplyr mutate select case_when
 #' @importFrom stringr str_extract_all str_remove_all str_replace_all str_squish regex
 #' @importFrom purrr map_chr
@@ -596,13 +589,13 @@ move_morphological_descriptors <- function(df) {
     dplyr::select(-morpho_info)
 }
 
-#' Move 'with ...' clauses to tax_epithet
-#'
-#' Detects `with ...` trailing clauses in `taxon_clean` and moves them to
-#' `tax_epithet`.
-#'
-#' @param df A data frame processed by [move_morphological_descriptors()].
-#' @return The input data frame with updated `taxon_clean` and `tax_epithet`.
+#' Move with ... clauses to tax_epithet
+#' Detects trailing with ... clauses in taxon_clean and moves them to
+#' tax_epithet.
+#' @param df A data frame with at least a taxon column. The function can
+#' be used independently because the cleaning schema is initialised on
+#' entry when missing.
+#' @return The input data frame with updated taxon_clean and tax_epithet.
 #' @importFrom dplyr mutate select case_when
 #' @importFrom stringr str_extract str_remove str_squish regex
 #' @export
@@ -632,12 +625,11 @@ move_with_descriptors <- function(df) {
 }
 
 #' Move forma (f.) designations to tax_epithet
-#'
-#' Detects ` f ` (standalone forma marker without dot) in `taxon_clean`
-#' and moves the trailing content to `tax_epithet`.
-#'
-#' @param df A data frame processed by [move_with_descriptors()].
-#' @return The input data frame with updated `taxon_clean` and `tax_epithet`.
+#' Detects f (standalone forma marker without dot) in taxon_clean
+#' and moves the trailing content to tax_epithet.
+#' @param df A data frame with at least a taxon column. The working
+#' cleaning columns are created internally if absent.
+#' @return The input data frame with updated taxon_clean and tax_epithet.
 #' @importFrom dplyr mutate select case_when
 #' @importFrom stringr str_extract str_remove str_squish
 #' @export
@@ -661,12 +653,11 @@ move_formia_to_epithet <- function(df) {
 }
 
 #' Move comma-separated trailing content to tax_epithet
-#'
-#' Splits `taxon_clean` at the first comma: keeps the left part in
-#' `taxon_clean` and moves the right part to `tax_epithet`.
-#'
-#' @param df A data frame processed by [move_formia_to_epithet()].
-#' @return The input data frame with updated `taxon_clean` and `tax_epithet`.
+#' Splits taxon_clean at the first comma, keeping the left part in
+#' taxon_clean and moving the right part to tax_epithet.
+#' @param df A data frame with at least a taxon column. The function works
+#' on the cleaning schema and initialises it internally when needed.
+#' @return The input data frame with updated taxon_clean and tax_epithet.
 #' @importFrom dplyr mutate case_when
 #' @importFrom stringr str_trim str_replace str_extract
 #' @export
@@ -690,12 +681,12 @@ move_commas_to_epithet <- function(df) {
 }
 
 #' Move author strings to tax_epithet
-#'
-#' Detects trailing author citations (e.g. `Hustedt 1930`, `(Cleve) Gran`)
-#' in `taxon_clean` and moves them to `tax_epithet`.
-#'
-#' @param df A data frame processed by [move_commas_to_epithet()].
-#' @return The input data frame with updated `taxon_clean` and `tax_epithet`.
+#' Detects trailing author citations (e.g. Hustedt 1930, (Cleve) Gran)
+#' in taxon_clean and moves them to tax_epithet.
+#' @param df A data frame with at least a taxon column. Missing
+#' cleaning-schema columns are added automatically via
+#' [ensure_cleaning_schema()].
+#' @return The input data frame with updated taxon_clean and tax_epithet.
 #' @importFrom dplyr mutate select case_when if_else
 #' @importFrom stringr str_detect str_extract str_remove str_squish regex
 #' @export
@@ -748,12 +739,11 @@ move_authors_to_epithet <- function(df) {
 }
 
 #' Remove residual sp/spp/ssp tokens from tax_epithet
-#'
-#' Cleans up redundant `sp`, `spp`, `ssp` tokens that may remain in
-#' `tax_epithet` after pipeline processing.
-#'
-#' @param df A data frame processed by [move_authors_to_epithet()].
-#' @return The input data frame with cleaned `tax_epithet`.
+#' Cleans up redundant sp, spp, and ssp tokens that may remain in
+#' tax_epithet after pipeline processing.
+#' @param df A data frame with at least a taxon column. The cleaning
+#' schema is guaranteed internally before the cleanup is applied.
+#' @return The input data frame with cleaned tax_epithet.
 #' @importFrom dplyr mutate
 #' @importFrom stringr str_remove_all str_squish regex
 #' @export
@@ -771,13 +761,13 @@ remove_sp_tokens <- function(df) {
 }
 
 #' Split entries with separators (/, &, +, or) into individual rows
-#'
-#' Detects taxon names containing `/`, `&`, `+`, or ` or ` and unfolds
-#' them into separate rows, recording the aggregate partner in `tax_epithet`.
-#'
-#' @param df A data frame processed by [remove_sp_tokens()].
+#' Detects taxon names containing /, &, +, or or and unfolds them
+#' into separate rows, recording the aggregate partner in tax_epithet.
+#' @param df A data frame with at least a taxon column. The function
+#' ensures the internal cleaning schema before splitting composite
+#' entries.
 #' @return A data frame with potentially more rows than the input, with
-#'   updated `taxon_clean`, `tax_epithet`, and `uncertain`.
+#' updated taxon_clean, tax_epithet, and uncertain.
 #' @importFrom dplyr mutate select group_by ungroup distinct case_when if_else n
 #' @importFrom stringr str_detect str_replace_all str_trim str_extract str_squish str_count str_c word
 #' @importFrom tidyr uncount
@@ -933,13 +923,12 @@ split_separator_entries <- function(df) {
 }
 
 #' Map common English names to accepted taxonomic names
-#'
-#' Replaces informal names and morphotypes (e.g. `diatom`, `ciliate`,
-#' `gymnodinioid`) with the corresponding accepted higher taxon name.
-#'
-#' @param df A data frame processed by [split_separator_entries()].
-#' @return The input data frame with updated `taxon_clean`, `tax_epithet`,
-#'   and `uncertain`.
+#' Replaces informal names and morphotypes (e.g. diatom, ciliate,
+#' gymnodinioid) with the corresponding accepted higher taxon name.
+#' @param df A data frame with at least a taxon column. Required cleaning
+#' columns are initialised internally when absent.
+#' @return The input data frame with updated taxon_clean, tax_epithet,
+#' and uncertain.
 #' @importFrom dplyr mutate select case_when if_else
 #' @importFrom stringr str_detect str_extract str_remove_all str_squish str_to_lower regex
 #' @export
@@ -1086,12 +1075,11 @@ process_generic_taxa <- function(df) {
 }
 
 #' Remove trailing hyphens and isolated dashes
-#'
-#' Final cleanup: removes trailing ` - ` constructs and isolated hyphens
+#' Final cleanup that removes trailing - constructs and isolated hyphens
 #' left over after other cleaning steps.
-#'
-#' @param df A data frame processed by [process_generic_taxa()].
-#' @return The input data frame with cleaned `taxon_clean`.
+#' @param df A data frame with at least a taxon column. The cleaning
+#' schema is ensured internally before applying the final hyphen cleanup.
+#' @return The input data frame with cleaned taxon_clean.
 #' @importFrom dplyr mutate
 #' @importFrom stringr str_remove str_replace_all str_squish
 #' @export
@@ -1107,36 +1095,31 @@ clean_trailing_hyphens <- function(df) {
 }
 
 #' Remove short interstitial tokens and infraspecific rank markers
-#'
-#' After the cleaning pipeline, tokens that appear between the genus and the
-#' specific epithet and that carry no independent taxonomic value are removed
-#' from `taxon_clean`. Two categories are handled:
-#'
-#' 1. **Short genus-initial abbreviations** (1-2 lowercase letters, optionally
-#'    hyphenated, e.g. `ch`, `g`, `p-n`): informal genus abbreviations inserted
-#'    by observers (e.g. "Chaetoceros ch affinis").
-#'
-#' 2. **Infraspecific rank markers** (with or without trailing dot): standard
-#'    botanical/algological rank abbreviations that appear between the species
-#'    epithet and the infraspecific epithet (e.g. "Thalassiosira var. expecta",
-#'    "Nitzschia subsp. gracilis"). The full list covers all ranks recognised by
-#'    the ICN (Madrid Code) and ICZN, including their common dotless variants:
-#'    `subvar`/`subvar.`, `subsp`/`subsp.`, `subf`/`subf.`,
-#'    `nothosubsp`/`nothosubsp.`, `nothovar`/`nothovar.`,
-#'    `nsubsp`/`nsubsp.`, `nvar`/`nvar.`, `ssp`/`ssp.`, `var`/`var.`,
-#'    `fo`/`fo.`, `f`/`f.`, `cv`/`cv.`, `morph`/`morph.`.
-#'
-#' In both cases the token is removed from `taxon_clean` and `uncertain` is
-#' set to `TRUE`. For rank markers the token is additionally preserved in
-#' `tax_epithet` (as taxonomic metadata), whereas genus-initial abbreviations
+#' After Stage 1 cleaning, tokens that appear between the genus and the
+#' specific epithet and that carry no independent taxonomic value are
+#' removed from taxon_clean. Two categories are handled:
+#' 1. Short genus-initial abbreviations (1-2 lowercase letters,
+#' optionally hyphenated, e.g. ch, g, p-n): informal observer
+#' abbreviations such as "Chaetoceros ch affinis".
+#' 2. Infraspecific rank markers (with or without trailing dot):
+#' standard botanical or algological rank abbreviations appearing between
+#' the species epithet and the infraspecific epithet, such as
+#' "Thalassiosira var. expecta" or "Nitzschia subsp. gracilis".
+#' The full list includes the common variants of subvar, subsp,
+#' subf, nothosubsp, nothovar, nsubsp, nvar, ssp, var,
+#' fo, f, cv, and morph.
+#' In both cases the token is removed from taxon_clean and uncertain is
+#' set to TRUE. For rank markers, the token is additionally preserved in
+#' tax_epithet as taxonomic metadata, whereas genus-initial abbreviations
 #' are silently discarded.
-#'
-#' This function must be called as the **last step** of the cleaning pipeline,
-#' after [clean_trailing_hyphens()].
-#'
-#' @param df A data frame processed by [clean_trailing_hyphens()].
-#' @return The input data frame with updated `taxon_clean`, `tax_epithet`,
-#'   and `uncertain`.
+#' This function is designed to be used as the last step of the full
+#' cleaning pipeline, after [clean_trailing_hyphens()]. It can still be
+#' called independently, but its canonical use is as the final
+#' normalisation step before [apply_vernacular_corrections()].
+#' @param df A data frame with at least a taxon column. The cleaning
+#' schema is ensured internally before processing.
+#' @return The input data frame with updated taxon_clean, tax_epithet,
+#' and uncertain.
 #' @importFrom dplyr mutate if_else case_when
 #' @importFrom stringr str_detect str_replace str_match str_squish regex
 #' @export
@@ -1213,35 +1196,30 @@ remove_short_interstitial_tokens <- function(df) {
     dplyr::select(-has_rank_token, -has_short_token, -rank_token)
 }
 
-#' Run the full cleaning pipeline (Step 1)
-#'
-#' Executes all cleaning sub-functions sequentially in the canonical order
-#' used by the package. For data frame input, the result is equivalent to
-#' calling each cleaning function one by one with the native pipe.
-#'
+#' Run the full cleaning pipeline (Stage 1)
+#' Executes all Stage 1 cleaning functions sequentially in the canonical
+#' order used by the package.
+#' Although individual cleaning functions are atomic and can be called
+#' independently, this wrapper provides the recommended entry point for
+#' routine use.
 #' The function also accepts a character vector (or a single string), which
-#' is converted internally to a data frame with a `taxon` column before
+#' is converted internally to a data frame with a taxon column before
 #' running the same pipeline.
-#'
-#' @param df A data frame/tibble with a raw taxon column, or a character
-#'   vector of raw taxon names.
+#' @param df A data frame or tibble with a raw taxon column, or a character
+#' vector of raw taxon names.
 #' @param col Character. Name of the input column containing the raw taxon
-#'   names. Default `"taxon"`.
-#'
-#' @return A cleaned data frame. When input is a character vector, returns a
-#'   formatted query-style result.
-#'
+#' names. Default "taxon".
+#' @return A cleaned data frame with the Stage 1 working columns populated,
+#' including taxon_clean, tax_epithet, and uncertain. When input is
+#' a character vector, returns a formatted query-style result.
 #' @examples
 #' \dontrun{
 #' run_cleaning_pipeline(c("Chaetoceros cf. decipiens", "O. sinensis [cyst]"))
-#'
 #' df <- data.frame(taxon = c("Thalassiosira weissflogii var. x"))
 #' run_cleaning_pipeline(df)
-#'
 #' df2 <- data.frame(raw_name = c("Emiliania huxleyi s.l."))
 #' run_cleaning_pipeline(df2, col = "raw_name")
 #' }
-#'
 #' @export
 run_cleaning_pipeline <- function(df, col = "taxon") {
   query_mode <- is.character(df)

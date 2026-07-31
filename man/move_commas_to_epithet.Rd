@@ -2,17 +2,21 @@
 % Please edit documentation in R/clean.R
 \name{move_commas_to_epithet}
 \alias{move_commas_to_epithet}
-\title{Move comma-separated trailing content to tax_epithet}
+\title{Move comma-separated trailing content to tax_epithet
+Splits taxon_clean at the first comma, keeping the left part in
+taxon_clean and moving the right part to tax_epithet.}
 \usage{
 move_commas_to_epithet(df)
 }
 \arguments{
-\item{df}{A data frame processed by \code{\link[=move_formia_to_epithet]{move_formia_to_epithet()}}.}
+\item{df}{A data frame with at least a taxon column. The function works
+on the cleaning schema and initialises it internally when needed.}
 }
 \value{
-The input data frame with updated \code{taxon_clean} and \code{tax_epithet}.
+The input data frame with updated taxon_clean and tax_epithet.
 }
 \description{
-Splits \code{taxon_clean} at the first comma: keeps the left part in
-\code{taxon_clean} and moves the right part to \code{tax_epithet}.
+Move comma-separated trailing content to tax_epithet
+Splits taxon_clean at the first comma, keeping the left part in
+taxon_clean and moving the right part to tax_epithet.
 }

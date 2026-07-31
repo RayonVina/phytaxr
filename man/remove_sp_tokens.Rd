@@ -2,17 +2,21 @@
 % Please edit documentation in R/clean.R
 \name{remove_sp_tokens}
 \alias{remove_sp_tokens}
-\title{Remove residual sp/spp/ssp tokens from tax_epithet}
+\title{Remove residual sp/spp/ssp tokens from tax_epithet
+Cleans up redundant sp, spp, and ssp tokens that may remain in
+tax_epithet after pipeline processing.}
 \usage{
 remove_sp_tokens(df)
 }
 \arguments{
-\item{df}{A data frame processed by \code{\link[=move_authors_to_epithet]{move_authors_to_epithet()}}.}
+\item{df}{A data frame with at least a taxon column. The cleaning
+schema is guaranteed internally before the cleanup is applied.}
 }
 \value{
-The input data frame with cleaned \code{tax_epithet}.
+The input data frame with cleaned tax_epithet.
 }
 \description{
-Cleans up redundant \code{sp}, \code{spp}, \code{ssp} tokens that may remain in
-\code{tax_epithet} after pipeline processing.
+Remove residual sp/spp/ssp tokens from tax_epithet
+Cleans up redundant sp, spp, and ssp tokens that may remain in
+tax_epithet after pipeline processing.
 }

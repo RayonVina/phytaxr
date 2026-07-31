@@ -2,17 +2,22 @@
 % Please edit documentation in R/clean.R
 \name{process_epithet_entries}
 \alias{process_epithet_entries}
-\title{Extract remaining parenthetical epithets}
+\title{Extract remaining parenthetical epithets
+Moves any remaining content in parentheses from taxon_clean to
+tax_epithet.}
 \usage{
 process_epithet_entries(df)
 }
 \arguments{
-\item{df}{A data frame processed by \code{\link[=move_size_to_epithet]{move_size_to_epithet()}}.}
+\item{df}{A data frame with at least a taxon column. The function
+operates on taxon_clean and initialises the cleaning schema when
+needed.}
 }
 \value{
-The input data frame with updated \code{taxon_clean} and \code{tax_epithet}.
+The input data frame with updated taxon_clean and tax_epithet.
 }
 \description{
-Moves any remaining content in parentheses from \code{taxon_clean} to
-\code{tax_epithet}.
+Extract remaining parenthetical epithets
+Moves any remaining content in parentheses from taxon_clean to
+tax_epithet.
 }

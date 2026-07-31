@@ -2,17 +2,21 @@
 % Please edit documentation in R/clean.R
 \name{move_formia_to_epithet}
 \alias{move_formia_to_epithet}
-\title{Move forma (f.) designations to tax_epithet}
+\title{Move forma (f.) designations to tax_epithet
+Detects f (standalone forma marker without dot) in taxon_clean
+and moves the trailing content to tax_epithet.}
 \usage{
 move_formia_to_epithet(df)
 }
 \arguments{
-\item{df}{A data frame processed by \code{\link[=move_with_descriptors]{move_with_descriptors()}}.}
+\item{df}{A data frame with at least a taxon column. The working
+cleaning columns are created internally if absent.}
 }
 \value{
-The input data frame with updated \code{taxon_clean} and \code{tax_epithet}.
+The input data frame with updated taxon_clean and tax_epithet.
 }
 \description{
-Detects \code{f} (standalone forma marker without dot) in \code{taxon_clean}
-and moves the trailing content to \code{tax_epithet}.
+Move forma (f.) designations to tax_epithet
+Detects f (standalone forma marker without dot) in taxon_clean
+and moves the trailing content to tax_epithet.
 }

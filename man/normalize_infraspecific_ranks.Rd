@@ -2,17 +2,21 @@
 % Please edit documentation in R/clean.R
 \name{normalize_infraspecific_ranks}
 \alias{normalize_infraspecific_ranks}
-\title{Normalize infraspecific rank notation}
+\title{Normalize infraspecific rank notation
+Ensures consistent formatting of var., f., subsp., ssp., and
+cv. in taxon_clean (space before, dot after, space after dot).}
 \usage{
 normalize_infraspecific_ranks(df)
 }
 \arguments{
-\item{df}{A data frame processed by \code{\link[=process_epithet_entries]{process_epithet_entries()}}.}
+\item{df}{A data frame with at least a taxon column. The cleaning
+schema is created internally if not already present.}
 }
 \value{
-The input data frame with normalized \code{taxon_clean}.
+The input data frame with normalized taxon_clean.
 }
 \description{
-Ensures consistent formatting of \code{var.}, \code{f.}, \code{subsp.}, \code{ssp.}, \code{cv.}
-in \code{taxon_clean} (space before, dot after, space after dot).
+Normalize infraspecific rank notation
+Ensures consistent formatting of var., f., subsp., ssp., and
+cv. in taxon_clean (space before, dot after, space after dot).
 }

@@ -2,19 +2,25 @@
 % Please edit documentation in R/clean.R
 \name{process_incertae_entries}
 \alias{process_incertae_entries}
-\title{Extract incertae sedis and qualification markers}
+\title{Extract incertae sedis and qualification markers
+Detects and removes qualifiers such as cf., aff., sensu lato,
+type, complex, group, ?, and parenthetical content from
+taxon_clean, storing them in tax_epithet.}
 \usage{
 process_incertae_entries(df)
 }
 \arguments{
-\item{df}{A data frame processed by \code{\link[=process_taxonomic_prefixes]{process_taxonomic_prefixes()}}.}
+\item{df}{A data frame with at least a taxon column. The required
+cleaning columns are created internally via \code{\link[=ensure_cleaning_schema]{ensure_cleaning_schema()}}
+when missing.}
 }
 \value{
-The input data frame with updated \code{taxon_clean}, \code{tax_epithet},
-and \code{uncertain}.
+The input data frame with updated taxon_clean, tax_epithet,
+and uncertain.
 }
 \description{
-Detects and removes qualifiers such as \code{cf.}, \code{aff.}, \verb{sensu lato},
-\code{type}, \code{complex}, \code{group}, \verb{?}, and parenthetical content from
-\code{taxon_clean}, storing them in \code{tax_epithet}.
+Extract incertae sedis and qualification markers
+Detects and removes qualifiers such as cf., aff., sensu lato,
+type, complex, group, ?, and parenthetical content from
+taxon_clean, storing them in tax_epithet.
 }

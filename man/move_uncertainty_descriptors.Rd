@@ -2,19 +2,24 @@
 % Please edit documentation in R/clean.R
 \name{move_uncertainty_descriptors}
 \alias{move_uncertainty_descriptors}
-\title{Move uncertainty descriptor terms to tax_epithet}
+\title{Move uncertainty descriptor terms to tax_epithet
+Detects terms like unidentified, undetermined, unclassified, and
+similar descriptors, moving them from taxon_clean to tax_epithet and
+setting uncertain = TRUE.}
 \usage{
 move_uncertainty_descriptors(df)
 }
 \arguments{
-\item{df}{A data frame processed by \code{\link[=move_reproductive_structures]{move_reproductive_structures()}}.}
+\item{df}{A data frame with at least a taxon column. Missing cleaning
+columns are initialised internally via \code{\link[=ensure_cleaning_schema]{ensure_cleaning_schema()}}.}
 }
 \value{
-The input data frame with updated \code{taxon_clean}, \code{tax_epithet},
-and \code{uncertain}.
+The input data frame with updated taxon_clean, tax_epithet,
+and uncertain.
 }
 \description{
-Detects terms like \code{unidentified}, \code{undetermined}, \code{unclassified}, etc.
-and moves them from \code{taxon_clean} to \code{tax_epithet}, also setting
-\code{uncertain = TRUE}.
+Move uncertainty descriptor terms to tax_epithet
+Detects terms like unidentified, undetermined, unclassified, and
+similar descriptors, moving them from taxon_clean to tax_epithet and
+setting uncertain = TRUE.
 }

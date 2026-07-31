@@ -2,17 +2,21 @@
 % Please edit documentation in R/clean.R
 \name{move_morphological_descriptors}
 \alias{move_morphological_descriptors}
-\title{Move morphological descriptor terms to tax_epithet}
+\title{Move morphological descriptor terms to tax_epithet
+Detects terms like centric, pennate, thecate, armored, and
+similar descriptors, moving them from taxon_clean to tax_epithet.}
 \usage{
 move_morphological_descriptors(df)
 }
 \arguments{
-\item{df}{A data frame processed by \code{\link[=move_uncertainty_descriptors]{move_uncertainty_descriptors()}}.}
+\item{df}{A data frame with at least a taxon column. The cleaning
+schema is ensured internally before any transformation is applied.}
 }
 \value{
-The input data frame with updated \code{taxon_clean} and \code{tax_epithet}.
+The input data frame with updated taxon_clean and tax_epithet.
 }
 \description{
-Detects terms like \code{centric}, \code{pennate}, \code{thecate}, \code{armored}, etc. and
-moves them from \code{taxon_clean} to \code{tax_epithet}.
+Move morphological descriptor terms to tax_epithet
+Detects terms like centric, pennate, thecate, armored, and
+similar descriptors, moving them from taxon_clean to tax_epithet.
 }
