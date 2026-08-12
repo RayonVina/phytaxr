@@ -5,6 +5,7 @@
 ![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)
 ![Version: 0.3.1](https://img.shields.io/badge/version-0.3.1-blue.svg)
 [![R-CMD-check](https://github.com/RayonVina/phytaxr/actions/workflows/r.yml/badge.svg)](https://github.com/RayonVina/phytaxr/actions/workflows/r.yml)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21905975.svg)](https://doi.org/10.5281/zenodo.21905975)
 ![Last commit](https://img.shields.io/github/last-commit/RayonVina/phytaxr?style=flat-square&color=b4befe)
 <!-- badges: end -->
 
