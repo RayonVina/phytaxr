@@ -1,0 +1,13 @@
+cff-version: 1.2.0
+message: "If you use phytaxr, please cite the software version used."
+type: software
+title: "phytaxr: Phytoplankton Taxonomic Curation Tools"
+version: 0.3.1
+doi: 10.5281/zenodo.21905975
+date-released: 2026-08-12
+license: MIT
+authors:
+  - family-names: "Rayón Viña"
+    given-names: "Fernando"
+    orcid: "https://orcid.org/0000-0002-1622-2180"
+repository-code: "https://github.com/RayonVina/phytaxr"
