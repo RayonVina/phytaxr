@@ -2,7 +2,7 @@ Package: phytaxr
 Title: Phytoplankton Taxonomic Curation Tools
 Version: 0.3.1
 Authors@R: 
-    person("Fernando", "Rayón Viña", , "tu@email.com", role = c("aut", "cre"))
+    person("Fernando", "Rayón Viña", , "frv@tutamail.com", role = c("aut", "cre"))
 Description: Provides tools for cleaning, standardizing, and resolving
     phytoplankton taxon names against external taxonomic databases (WoRMS,
     GBIF). Designed for use with the PhytoMAP database.
