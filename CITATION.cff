@@ -3,7 +3,7 @@ message: "If you use phytaxr, please cite the software version used."
 type: software
 title: "phytaxr: Phytoplankton Taxonomic Curation Tools"
 version: 0.3.2
-doi: 10.5281/zenodo.21905975
+doi: 10.5281/zenodo.21905974
 date-released: 2026-08-18
 license: MIT
 authors:
