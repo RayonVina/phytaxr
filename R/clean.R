@@ -196,7 +196,8 @@ process_incertae_entries <- function(df) {
   qualif_pattern <- "\\b(?:cf|aff|nr|agg|indet|incerta|incertae sedis|sensu\\s+lato|sensu\\s+stricto|type|complex|group|juv|et)\\.?(?=\\b)"
   df |>
     dplyr::mutate(
-      uncertain = stringr::str_detect(taxon_clean, qualif_pattern) |
+      uncertain = uncertain |
+        stringr::str_detect(taxon_clean, qualif_pattern) |
         stringr::str_detect(taxon_clean, "\\?"),
       paren_info = stringr::str_extract_all(taxon_clean, "\\([^)]*\\)") |>
         purrr::map_chr(~ stringr::str_squish(paste(.x, collapse = " "))) |>

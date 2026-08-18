@@ -1,3 +1,10 @@
+# phytaxr 0.3.2
+
+## Bug fixes
+
+- Preserve existing `uncertain` flags when processing taxonomic rank
+  prefixes and incertae qualifiers.
+
 # phytaxr 0.3.1
 
 ## Documentation

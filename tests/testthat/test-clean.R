@@ -161,3 +161,19 @@ test_that("run_cleaning_pipeline() removes sp. from taxon_clean in data.frame mo
   result <- run_cleaning_pipeline(df)
   expect_false(grepl("\\bsp\\b", result$taxon_clean[1]))
 })
+
+test_that("process_incertae_entries preserves prior uncertainty flags", {
+  df <- data.frame(
+    taxon = "O. Chaetocerotales",
+    stringsAsFactors = FALSE
+  )
+
+  result <- df |>
+    normalize_characters() |>
+    process_taxonomic_prefixes() |>
+    process_incertae_entries()
+
+  expect_equal(result$taxon_clean, "Chaetocerotales")
+  expect_equal(result$tax_epithet, "Order uncertain")
+  expect_true(result$uncertain)
+})

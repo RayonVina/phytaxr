@@ -1,6 +1,6 @@
 Package: phytaxr
 Title: Phytoplankton Taxonomic Curation Tools
-Version: 0.3.1
+Version: 0.3.2
 Authors@R: 
     person("Fernando", "Rayón Viña", , "frv@tutamail.com", role = c("aut", "cre"))
 Description: Provides tools for cleaning, standardizing, and resolving
@@ -35,4 +35,4 @@ VignetteBuilder:
 Config/testthat/edition: 3
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-Config/roxygen2/version: 8.0.0
+Config/roxygen2/version: 8.1.0
